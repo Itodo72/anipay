@@ -908,26 +908,9 @@ select.form-inp{appearance:none;cursor:pointer;background-image:url("data:image/
       <div class="section-link" onclick="go('history')">See all</div>
     </div>
   </div>
-  <div class="txn-list u6">
-    <div class="txn">
-      <div class="txn-icon" style="background:#e8f4ed;border-color:#c8e6d4">⚡</div>
-      <div class="txn-info"><div class="txn-name">AEDC Prepaid</div><div class="txn-meta">Token delivered · 04159302881</div></div>
-      <div class="txn-right"><div class="txn-amount">₦5,000</div><div class="txn-date">Today, 9:42am</div><span class="badge badge-ok">Confirmed</span></div>
-    </div>
-    <div class="txn">
-      <div class="txn-icon" style="background:#e8f0fd;border-color:#c5d8fb">📶</div>
-      <div class="txn-info"><div class="txn-name">MTN 10GB Data</div><div class="txn-meta">Activated · 08012345678</div></div>
-      <div class="txn-right"><div class="txn-amount">₦3,500</div><div class="txn-date">Yesterday</div><span class="badge badge-ok">Confirmed</span></div>
-    </div>
-    <div class="txn">
-      <div class="txn-icon" style="background:#eeeef8;border-color:#d4d4f0">✈️</div>
-      <div class="txn-info"><div class="txn-name">Air Peace · ABV → LOS</div><div class="txn-meta">E-ticket sent to email</div></div>
-      <div class="txn-right"><div class="txn-amount">₦45,000</div><div class="txn-date">Apr 8</div><span class="badge badge-ok">Confirmed</span></div>
-    </div>
-    <div class="txn">
-      <div class="txn-icon" style="background:#fdeef0;border-color:#f5c8ce">🎬</div>
-      <div class="txn-info"><div class="txn-name">Genesis Cinema · 2 seats</div><div class="txn-meta">Transformers · Sat 3:00pm</div></div>
-      <div class="txn-right"><div class="txn-amount">₦5,400</div><div class="txn-date">Apr 7</div><span class="badge badge-ok">Confirmed</span></div>
+  <div class="txn-list u6" id="recent-txns">
+    <div style="text-align:center;padding:28px 20px;color:var(--ink3)">
+      <div style="font-size:14px">No transactions yet — fund your wallet to get started!</div>
     </div>
   </div>
 </div>
@@ -1010,28 +993,26 @@ select.form-inp{appearance:none;cursor:pointer;background-image:url("data:image/
 
 <!-- ══ HISTORY ══ -->
 <div class="screen" id="history">
-  <div class="pay-topbar" style="background:var(--bg2)"><div class="back-circle" onclick="go('home')">←</div><div><div class="pay-title">Transaction history</div><div class="pay-subtitle">All your payments</div></div></div>
-  <div class="filter-bar">
-    <div class="filter-tab on" onclick="fT(this)">All</div>
-    <div class="filter-tab" onclick="fT(this)">Electricity</div>
-    <div class="filter-tab" onclick="fT(this)">Data</div>
-    <div class="filter-tab" onclick="fT(this)">Flights</div>
-    <div class="filter-tab" onclick="fT(this)">Cinema</div>
-    <div class="filter-tab" onclick="fT(this)">Cable TV</div>
-    <div class="filter-tab" onclick="fT(this)">Others</div>
+  <div class="pay-topbar" style="background:var(--bg2)">
+    <div class="back-circle" onclick="go('home')">←</div>
+    <div><div class="pay-title">Transaction history</div><div class="pay-subtitle">All your payments</div></div>
   </div>
-  <div class="txn-list" style="padding:0 18px">
-    <div class="day-label">Today</div>
-    <div class="txn"><div class="txn-icon" style="background:#e8f4ed;border-color:#c8e6d4">⚡</div><div class="txn-info"><div class="txn-name">AEDC Prepaid</div><div class="txn-meta">Token: 4521-8832-1129-4421</div></div><div class="txn-right"><div class="txn-amount">₦5,000</div><div class="txn-date">9:42am</div><span class="badge badge-ok">Confirmed</span></div></div>
-    <div class="day-label">Yesterday</div>
-    <div class="txn"><div class="txn-icon" style="background:#e8f0fd;border-color:#c5d8fb">📶</div><div class="txn-info"><div class="txn-name">MTN 10GB Data</div><div class="txn-meta">08012345678 · Activated</div></div><div class="txn-right"><div class="txn-amount">₦3,500</div><div class="txn-date">2:15pm</div><span class="badge badge-ok">Confirmed</span></div></div>
-    <div class="txn"><div class="txn-icon" style="background:#fdf0ee;border-color:#f5c8c0">📞</div><div class="txn-info"><div class="txn-name">Airtel Airtime</div><div class="txn-meta">07098765432</div></div><div class="txn-right"><div class="txn-amount">₦500</div><div class="txn-date">11:03am</div><span class="badge badge-ok">Confirmed</span></div></div>
-    <div class="day-label">Apr 8</div>
-    <div class="txn"><div class="txn-icon" style="background:#eeeef8;border-color:#d4d4f0">✈️</div><div class="txn-info"><div class="txn-name">Air Peace · ABV → LOS</div><div class="txn-meta">E-ticket: AP-20250408-4421</div></div><div class="txn-right"><div class="txn-amount">₦45,000</div><div class="txn-date">10:00am</div><span class="badge badge-ok">Confirmed</span></div></div>
-    <div class="day-label">Apr 7</div>
-    <div class="txn"><div class="txn-icon" style="background:#fdeef0;border-color:#f5c8ce">🎬</div><div class="txn-info"><div class="txn-name">Genesis Cinema · 2 seats</div><div class="txn-meta">Transformers · Sat 3:00pm · Row F</div></div><div class="txn-right"><div class="txn-amount">₦5,400</div><div class="txn-date">8:20pm</div><span class="badge badge-ok">Confirmed</span></div></div>
-    <div class="txn"><div class="txn-icon" style="background:#fef8ec;border-color:#f5dfa0">📺</div><div class="txn-info"><div class="txn-name">DSTV Compact</div><div class="txn-meta">Smart card · 7012345678</div></div><div class="txn-right"><div class="txn-amount">₦9,900</div><div class="txn-date">6:10pm</div><span class="badge badge-ok">Confirmed</span></div></div>
-    <div class="txn"><div class="txn-icon" style="background:#e8f6f4;border-color:#b8e8e2">💧</div><div class="txn-info"><div class="txn-name">ASWC Water Bill</div><div class="txn-meta">Acct · 123456789</div></div><div class="txn-right"><div class="txn-amount">₦1,500</div><div class="txn-date">3:12pm</div><span class="badge badge-pending">Pending</span></div></div>
+  <div class="filter-bar">
+    <div class="filter-tab on" onclick="filterTxns('all',this)">All</div>
+    <div class="filter-tab" onclick="filterTxns('electricity',this)">Electricity</div>
+    <div class="filter-tab" onclick="filterTxns('data',this)">Data</div>
+    <div class="filter-tab" onclick="filterTxns('fund',this)">Wallet funding</div>
+    <div class="filter-tab" onclick="filterTxns('tv',this)">Cable TV</div>
+    <div class="filter-tab" onclick="filterTxns('airtime',this)">Airtime</div>
+    <div class="filter-tab" onclick="filterTxns('flight',this)">Flights</div>
+    <div class="filter-tab" onclick="filterTxns('cinema',this)">Cinema</div>
+  </div>
+  <!-- Live transaction list -->
+  <div id="history-list" style="padding:0 18px">
+    <div style="text-align:center;padding:40px 20px;color:var(--ink3)">
+      <div style="font-size:32px;margin-bottom:12px">📋</div>
+      <div style="font-size:15px;font-weight:500">Loading transactions…</div>
+    </div>
   </div>
 </div>
 
@@ -1547,6 +1528,161 @@ function initFirebase() {
 
   // expose setLoader globally for creditWallet
   window.setLoader = setLoader;
+
+  // ── TRANSACTION & CASHBACK ENGINE ────────────────────────────
+
+  // Config — icon, colour, label per transaction type
+  var TXN_META = {
+    fund:        { icon:'💰', bg:'#e8f4ed', label:'Wallet funded'        },
+    electricity: { icon:'⚡', bg:'#fef8ec', label:'Electricity'           },
+    data:        { icon:'📶', bg:'#e8f0fd', label:'Data subscription'     },
+    airtime:     { icon:'📞', bg:'#fdf0ee', label:'Airtime top-up'        },
+    tv:          { icon:'📺', bg:'#fff8e8', label:'Cable TV'              },
+    flight:      { icon:'✈️', bg:'#eeeef8', label:'Flight ticket'         },
+    cinema:      { icon:'🎬', bg:'#fdeef0', label:'Cinema ticket'         },
+    water:       { icon:'💧', bg:'#e8f6f4', label:'Water bill'            },
+    internet:    { icon:'🌐', bg:'#e8f4ed', label:'Internet'              },
+    betting:     { icon:'🎯', bg:'#f0f8ee', label:'Betting wallet'        },
+    hotel:       { icon:'🏨', bg:'#fef4e8', label:'Hotel booking'         },
+    jamb:        { icon:'🎓', bg:'#eef4ff', label:'JAMB'                  },
+    waec:        { icon:'📝', bg:'#f4eeff', label:'WAEC'                  },
+    insurance:   { icon:'🛡️', bg:'#eef8f4', label:'Insurance'            },
+    hospital:    { icon:'🏥', bg:'#fdeef0', label:'Hospital bill'         },
+    default:     { icon:'💳', bg:'#f0f0f0', label:'Transaction'           }
+  };
+
+  function getTxnMeta(type) {
+    return TXN_META[type] || TXN_META['default'];
+  }
+
+  function formatTxnDate(ts) {
+    if (!ts) return '';
+    var d   = ts.toDate ? ts.toDate() : new Date(ts);
+    var now = new Date();
+    var diff = Math.floor((now - d) / 86400000);
+    if (diff === 0) return 'Today, ' + d.toLocaleTimeString('en-NG', {hour:'2-digit', minute:'2-digit'});
+    if (diff === 1) return 'Yesterday, ' + d.toLocaleTimeString('en-NG', {hour:'2-digit', minute:'2-digit'});
+    return d.toLocaleDateString('en-NG', {day:'2-digit', month:'short'}) + ', ' +
+           d.toLocaleTimeString('en-NG', {hour:'2-digit', minute:'2-digit'});
+  }
+
+  function buildTxnHTML(txn) {
+    var m      = getTxnMeta(txn.type);
+    var isFund = txn.type === 'fund';
+    var name   = isFund ? 'Wallet funded' : (txn.service || m.label);
+    var meta   = isFund ? 'Via Paystack · Ref: ' + (txn.paystackRef||'').slice(-8)
+                        : (txn.provider || '') + (txn.reference ? ' · ' + txn.reference : '');
+    var amt    = (isFund ? '+' : '-') + '₦' + (txn.amount||0).toLocaleString('en-NG') + '.00';
+    var amtClr = isFund ? 'color:var(--green)' : '';
+    var badge  = txn.status === 'success'
+      ? '<span class="badge badge-ok">Confirmed</span>'
+      : '<span class="badge badge-pending">Pending</span>';
+    var cashback = (!isFund && txn.cashback)
+      ? '<div style="font-size:11px;color:var(--amber);margin-top:2px">+₦'+txn.cashback.toLocaleString()+' cashback</div>'
+      : '';
+    return '<div class="txn">' +
+      '<div class="txn-icon" style="background:'+m.bg+'">'+m.icon+'</div>' +
+      '<div class="txn-info">' +
+        '<div class="txn-name">'+name+'</div>' +
+        '<div class="txn-meta">'+meta+'</div>' +
+        cashback +
+      '</div>' +
+      '<div class="txn-right">' +
+        '<div class="txn-amount" style="'+amtClr+'">'+amt+'</div>' +
+        '<div class="txn-date">'+formatTxnDate(txn.createdAt)+'</div>' +
+        badge +
+      '</div>' +
+    '</div>';
+  }
+
+  // All transactions cache
+  var _allTxns = [];
+
+  // Load transactions from Firestore (real-time listener)
+  function loadTransactions(uid) {
+    db.collection('transactions')
+      .where('uid', '==', uid)
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .onSnapshot(function(snap) {
+        _allTxns = snap.docs.map(function(d) {
+          return Object.assign({ id: d.id }, d.data());
+        });
+        renderRecentTxns(_allTxns.slice(0, 4));
+        renderHistoryList(_allTxns, 'all');
+      }, function(err) {
+        console.error('loadTransactions:', err);
+      });
+  }
+
+  function renderRecentTxns(txns) {
+    var el = document.getElementById('recent-txns');
+    if (!el) return;
+    if (!txns.length) {
+      el.innerHTML = '<div style="text-align:center;padding:28px 20px;color:var(--ink3);font-size:14px">No transactions yet — fund your wallet to get started!</div>';
+      return;
+    }
+    el.innerHTML = txns.map(buildTxnHTML).join('');
+  }
+
+  function renderHistoryList(txns, filter) {
+    var el = document.getElementById('history-list');
+    if (!el) return;
+    var filtered = filter === 'all' ? txns : txns.filter(function(t){ return t.type === filter; });
+    if (!filtered.length) {
+      el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--ink3)">' +
+        '<div style="font-size:32px;margin-bottom:12px">📭</div>' +
+        '<div style="font-size:15px;font-weight:500">No transactions here yet</div>' +
+      '</div>';
+      return;
+    }
+    el.innerHTML = '<div style="padding-bottom:100px">' +
+      filtered.map(buildTxnHTML).join('') +
+    '</div>';
+  }
+
+  // Filter function called by tab clicks
+  window.filterTxns = function(type, el) {
+    document.querySelectorAll('.filter-tab').forEach(function(t){ t.classList.remove('on'); });
+    el.classList.add('on');
+    renderHistoryList(_allTxns, type);
+  };
+
+  // ── CASHBACK ENGINE ──────────────────────────────────────────
+  // Called after every successful bill payment
+  // Rate: 1% of transaction amount
+  function awardCashback(uid, amount, txnId) {
+    var cashback = Math.round(amount * 0.01);
+    if (cashback < 1) return;
+    var userRef = db.collection('users').doc(uid);
+    userRef.get().then(function(snap) {
+      if (!snap.exists) return;
+      var current = snap.data().cashback || 0;
+      var newCb   = current + cashback;
+      userRef.update({ cashback: newCb }).then(function() {
+        // Update cashback display
+        var cb = document.getElementById('cb-amount-display');
+        if (cb) cb.textContent = '₦' + newCb.toLocaleString('en-NG') + '.00';
+        // Update profile stats
+        var ps = document.querySelectorAll('.p-stat-val');
+        if (ps[1]) ps[1].textContent = '₦' + newCb.toLocaleString();
+        // Also update txn record with cashback earned
+        if (txnId) {
+          db.collection('transactions').doc(txnId).update({ cashback: cashback })
+            .catch(function(){});
+        }
+      });
+    });
+  }
+  window.awardCashback = awardCashback;
+
+  // Attach loadTransactions to profile load so it fires on login
+  var _origLoadProfile = loadUserProfile;
+  loadUserProfile = function(user) {
+    return _origLoadProfile(user).then(function() {
+      loadTransactions(user.uid);
+    });
+  };
 
   // ── Firebase is ready ─────────────────────────────────────
   window._fbReady = true;
