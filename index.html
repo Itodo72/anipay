@@ -1232,13 +1232,15 @@ function toast(msg,ok=false){
 }
 // ── FUND WALLET HELPERS ───────────────────────────────────────
 function setFundAmt(v) {
-  document.getElementById('fund-amount').value = v;
-  updateFundSummary();
+  var el = document.getElementById('fund-amount');
+  if (el) { el.value = v; updateFundSummary(); }
 }
 
 function updateFundSummary() {
-  var v = parseInt(document.getElementById('fund-amount').value) || 0;
-  var s = document.getElementById('fund-summary');
+  var el = document.getElementById('fund-amount');
+  var v  = parseInt(el ? el.value : 0) || 0;
+  var s  = document.getElementById('fund-summary');
+  if (!s) return;
   if (v >= 100) {
     s.style.display = 'block';
     document.getElementById('fund-sum-amt').textContent   = '₦' + v.toLocaleString('en-NG') + '.00';
@@ -1249,82 +1251,89 @@ function updateFundSummary() {
 }
 
 function initPaystack() {
-  var amt = parseInt(document.getElementById('fund-amount').value) || 0;
+  // Guard: Paystack script must be loaded
+  if (typeof PaystackPop === 'undefined') {
+    toast('Payment system loading, please try again.'); return;
+  }
+  // Guard: Firebase must be ready
+  if (!window._fbReady) {
+    toast('Please wait, app is still loading.'); return;
+  }
+
+  var amt  = parseInt(document.getElementById('fund-amount').value) || 0;
   if (amt < 100) { toast('Minimum amount is ₦100'); return; }
 
-  // Get current user email from Firebase — fallback to phone-based email
-  var user  = firebase.auth().currentUser;
-  if (!user) { toast('Please sign in first'); return; }
+  var user = firebase.auth().currentUser;
+  if (!user) { toast('Please sign in first'); go('welcome'); return; }
 
-  var email = user.email || (user.phoneNumber.replace('+','') + '@anipay.ng');
+  var email = user.email || (user.phoneNumber.replace(/\+/g,'') + '@anipay.ng');
   var ref   = 'ANI-FUND-' + Date.now();
 
-  var handler = PaystackPop.setup({
-    key:       'pk_test_3ca796e6b4cfda9e223b0f3b500604cf81b4971d',
-    email:     email,
-    amount:    amt * 100,  // Paystack uses kobo
-    currency:  'NGN',
-    ref:       ref,
-    metadata: {
-      custom_fields: [
-        { display_name: 'User ID',    variable_name: 'user_id',    value: user.uid },
-        { display_name: 'User Phone', variable_name: 'user_phone', value: user.phoneNumber }
-      ]
-    },
-    onClose: function() {
-      toast('Payment cancelled.');
-    },
-    callback: function(response) {
-      // Payment successful — credit wallet in Firestore
-      creditWallet(user.uid, amt, ref, response.reference);
-    }
-  });
-  handler.openIframe();
+  try {
+    var handler = PaystackPop.setup({
+      key:      'pk_test_3ca796e6b4cfda9e223b0f3b500604cf81b4971d',
+      email:    email,
+      amount:   amt * 100,
+      currency: 'NGN',
+      ref:      ref,
+      metadata: {
+        custom_fields: [
+          { display_name:'User ID',    variable_name:'user_id',    value: user.uid },
+          { display_name:'User Phone', variable_name:'user_phone', value: user.phoneNumber }
+        ]
+      },
+      onClose: function() {
+        toast('Payment window closed.');
+      },
+      callback: function(response) {
+        creditWallet(user.uid, amt, ref, response.reference);
+      }
+    });
+    handler.openIframe();
+  } catch(e) {
+    console.error('Paystack error:', e);
+    toast('Could not open payment. Try again.');
+  }
 }
 
 function creditWallet(uid, amount, localRef, paystackRef) {
-  setLoader(true, 'Crediting your wallet…');
-  var userRef = firebase.firestore().collection('users').doc(uid);
+  var ldr = document.getElementById('ldr');
+  var lt  = document.getElementById('auth-loader-txt');
+  if (lt) lt.textContent = 'Crediting your wallet…';
+  if (ldr) ldr.classList.add('show');
+
+  var db      = firebase.firestore();
+  var userRef = db.collection('users').doc(uid);
 
   userRef.get().then(function(snap) {
-    if (!snap.exists) { setLoader(false); toast('User not found'); return; }
-    var current = snap.data().walletBalance || 0;
+    var current = snap.exists ? (snap.data().walletBalance || 0) : 0;
     var newBal  = current + amount;
-
-    // Update wallet balance
     return userRef.update({ walletBalance: newBal }).then(function() {
-      // Save funding transaction
-      return firebase.firestore().collection('transactions').add({
-        uid:        uid,
-        type:       'fund',
-        amount:     amount,
-        balAfter:   newBal,
-        ref:        localRef,
-        paystackRef:paystackRef,
-        status:     'success',
-        createdAt:  firebase.firestore.FieldValue.serverTimestamp()
+      return db.collection('transactions').add({
+        uid: uid, type: 'fund', amount: amount,
+        balAfter: newBal, ref: localRef, paystackRef: paystackRef,
+        status: 'success',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     }).then(function() {
-      setLoader(false);
-      // Update wallet display
+      if (ldr) ldr.classList.remove('show');
       var wb = document.getElementById('wallet-bal-display');
       if (wb) wb.textContent = newBal.toLocaleString('en-NG');
-      // Reset fund form
       document.getElementById('fund-amount').value = '';
-      document.getElementById('fund-summary').style.display = 'none';
-      // Go home and show success
+      var fs = document.getElementById('fund-summary');
+      if (fs) fs.style.display = 'none';
       go('home');
-      toast('₦' + amount.toLocaleString() + ' added to your wallet! 🎉', true);
+      toast('₦' + amount.toLocaleString('en-NG') + ' added to wallet! 🎉', true);
     });
   }).catch(function(err) {
-    setLoader(false);
-    console.error('creditWallet error:', err);
-    toast('Payment received but wallet update failed. Contact support.');
+    if (ldr) ldr.classList.remove('show');
+    console.error('creditWallet:', err);
+    toast('Wallet update failed. Contact support with ref: ' + localRef);
   });
 }
 
-window.initPaystack     = initPaystack;
-window.setFundAmt       = setFundAmt;
+window.initPaystack      = initPaystack;
+window.setFundAmt        = setFundAmt;
 window.updateFundSummary = updateFundSummary;
 
 <!-- ══ FIREBASE AUTH ══ -->
@@ -1378,14 +1387,24 @@ function initFirebase() {
   var confirmResult = null;
   var currentFlow   = 'reg';
 
-  // Auth state
+  // Auth state — handles both logged-in and logged-out
   auth.onAuthStateChanged(function(user) {
     if (user) {
+      // Logged in — load profile then go home
       loadUserProfile(user).then(function() {
-        var active = document.querySelector('.screen.active');
+        var active  = document.querySelector('.screen.active');
         var authIds = ['splash','welcome','reg','login','otp'];
         if (active && authIds.includes(active.id)) go('home');
       });
+    } else {
+      // Not logged in — leave splash after 2s, go to welcome
+      var active = document.querySelector('.screen.active');
+      if (active && active.id === 'splash') {
+        setTimeout(function() {
+          var still = document.querySelector('.screen.active');
+          if (still && still.id === 'splash') go('welcome');
+        }, 2000);
+      }
     }
   });
 
