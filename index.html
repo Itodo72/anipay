@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Inter+Tight:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <!-- Firebase with fallback CDNs -->
+<!-- Paystack -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
 // Show Firebase load status in console
 console.log('Loading Firebase...');
@@ -959,35 +961,50 @@ select.form-inp{appearance:none;cursor:pointer;background-image:url("data:image/
 
 <!-- ══ FUND ══ -->
 <div class="screen" id="fund" style="background:var(--bg2)">
-  <div class="pay-topbar"><div class="back-circle" onclick="go('home')">←</div><div><div class="pay-title">Fund wallet</div><div class="pay-subtitle">Instant · No deposit fees</div></div></div>
+  <div class="pay-topbar">
+    <div class="back-circle" onclick="go('home')">←</div>
+    <div><div class="pay-title">Fund wallet</div><div class="pay-subtitle">Instant · No deposit fees</div></div>
+  </div>
   <div class="pay-body">
     <div class="p-section">
       <label class="p-label">Amount (₦)</label>
-      <input class="form-inp" type="number" placeholder="e.g. 5,000"/>
+      <input class="form-inp" id="fund-amount" type="number" placeholder="e.g. 5000" oninput="updateFundSummary()"/>
       <div class="amount-presets">
-        <div class="amt-chip">₦1,000</div><div class="amt-chip">₦2,000</div>
-        <div class="amt-chip">₦5,000</div><div class="amt-chip">₦10,000</div>
-        <div class="amt-chip">₦20,000</div><div class="amt-chip">₦50,000</div>
+        <div class="amt-chip" onclick="setFundAmt(1000)">₦1,000</div>
+        <div class="amt-chip" onclick="setFundAmt(2000)">₦2,000</div>
+        <div class="amt-chip" onclick="setFundAmt(5000)">₦5,000</div>
+        <div class="amt-chip" onclick="setFundAmt(10000)">₦10,000</div>
+        <div class="amt-chip" onclick="setFundAmt(20000)">₦20,000</div>
+        <div class="amt-chip" onclick="setFundAmt(50000)">₦50,000</div>
       </div>
     </div>
-    <label class="p-label" style="display:block;margin-bottom:12px">How would you like to pay?</label>
-    <div class="fund-method on" onclick="sF(this)">
+
+    <!-- Fund summary -->
+    <div class="summary" id="fund-summary" style="display:none;margin-bottom:20px">
+      <div class="sum-row"><span class="k">Amount to add</span><span class="v" id="fund-sum-amt">—</span></div>
+      <div class="sum-row"><span class="k">Deposit fee</span><span class="v free-tag">₦0.00 — Free</span></div>
+      <div class="sum-row total"><span class="k">You will pay</span><span class="v" id="fund-sum-total">—</span></div>
+    </div>
+
+    <label class="p-label" style="display:block;margin-bottom:12px">Payment method</label>
+    <div class="fund-method on" onclick="sF(this)" data-method="card">
       <div class="fund-icon">💳</div>
       <div style="flex:1"><div class="fund-name">Debit card / Bank transfer</div><div class="fund-sub">Instant — powered by Paystack</div></div>
       <div class="fund-radio"></div>
     </div>
-    <div class="fund-method" onclick="sF(this)">
+    <div class="fund-method" onclick="sF(this)" data-method="ussd">
       <div class="fund-icon">📲</div>
       <div style="flex:1"><div class="fund-name">USSD (*737# · *901# · *822#)</div><div class="fund-sub">Works without internet</div></div>
       <div class="fund-radio"></div>
     </div>
-    <div class="fund-method" onclick="sF(this)">
+    <div class="fund-method" onclick="sF(this)" data-method="transfer">
       <div class="fund-icon">🏦</div>
       <div style="flex:1"><div class="fund-name">Opay / PalmPay transfer</div><div class="fund-sub">Transfer to your Anipay virtual account</div></div>
       <div class="fund-radio"></div>
     </div>
-    <button class="cta-btn" style="margin-top:20px">Proceed to payment →</button>
-    <div class="secure-line" style="margin-top:10px">No funding fees · Balance credited instantly</div>
+
+    <button class="cta-btn" style="margin-top:20px" onclick="initPaystack()">Proceed to payment →</button>
+    <div class="secure-line" style="margin-top:10px">🔒 No deposit fees · Secured by Paystack</div>
   </div>
 </div>
 
@@ -1213,8 +1230,102 @@ function toast(msg,ok=false){
   t.className='toast show'+(ok?' ok':'');
   clearTimeout(_t);_t=setTimeout(()=>t.className='toast',2800);
 }
-setTimeout(()=>go('welcome'),2000);
-</script>
+// ── FUND WALLET HELPERS ───────────────────────────────────────
+function setFundAmt(v) {
+  document.getElementById('fund-amount').value = v;
+  updateFundSummary();
+}
+
+function updateFundSummary() {
+  var v = parseInt(document.getElementById('fund-amount').value) || 0;
+  var s = document.getElementById('fund-summary');
+  if (v >= 100) {
+    s.style.display = 'block';
+    document.getElementById('fund-sum-amt').textContent   = '₦' + v.toLocaleString('en-NG') + '.00';
+    document.getElementById('fund-sum-total').textContent = '₦' + v.toLocaleString('en-NG') + '.00';
+  } else {
+    s.style.display = 'none';
+  }
+}
+
+function initPaystack() {
+  var amt = parseInt(document.getElementById('fund-amount').value) || 0;
+  if (amt < 100) { toast('Minimum amount is ₦100'); return; }
+
+  // Get current user email from Firebase — fallback to phone-based email
+  var user  = firebase.auth().currentUser;
+  if (!user) { toast('Please sign in first'); return; }
+
+  var email = user.email || (user.phoneNumber.replace('+','') + '@anipay.ng');
+  var ref   = 'ANI-FUND-' + Date.now();
+
+  var handler = PaystackPop.setup({
+    key:       'pk_test_3ca796e6b4cfda9e223b0f3b500604cf81b4971d',
+    email:     email,
+    amount:    amt * 100,  // Paystack uses kobo
+    currency:  'NGN',
+    ref:       ref,
+    metadata: {
+      custom_fields: [
+        { display_name: 'User ID',    variable_name: 'user_id',    value: user.uid },
+        { display_name: 'User Phone', variable_name: 'user_phone', value: user.phoneNumber }
+      ]
+    },
+    onClose: function() {
+      toast('Payment cancelled.');
+    },
+    callback: function(response) {
+      // Payment successful — credit wallet in Firestore
+      creditWallet(user.uid, amt, ref, response.reference);
+    }
+  });
+  handler.openIframe();
+}
+
+function creditWallet(uid, amount, localRef, paystackRef) {
+  setLoader(true, 'Crediting your wallet…');
+  var userRef = firebase.firestore().collection('users').doc(uid);
+
+  userRef.get().then(function(snap) {
+    if (!snap.exists) { setLoader(false); toast('User not found'); return; }
+    var current = snap.data().walletBalance || 0;
+    var newBal  = current + amount;
+
+    // Update wallet balance
+    return userRef.update({ walletBalance: newBal }).then(function() {
+      // Save funding transaction
+      return firebase.firestore().collection('transactions').add({
+        uid:        uid,
+        type:       'fund',
+        amount:     amount,
+        balAfter:   newBal,
+        ref:        localRef,
+        paystackRef:paystackRef,
+        status:     'success',
+        createdAt:  firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).then(function() {
+      setLoader(false);
+      // Update wallet display
+      var wb = document.getElementById('wallet-bal-display');
+      if (wb) wb.textContent = newBal.toLocaleString('en-NG');
+      // Reset fund form
+      document.getElementById('fund-amount').value = '';
+      document.getElementById('fund-summary').style.display = 'none';
+      // Go home and show success
+      go('home');
+      toast('₦' + amount.toLocaleString() + ' added to your wallet! 🎉', true);
+    });
+  }).catch(function(err) {
+    setLoader(false);
+    console.error('creditWallet error:', err);
+    toast('Payment received but wallet update failed. Contact support.');
+  });
+}
+
+window.initPaystack     = initPaystack;
+window.setFundAmt       = setFundAmt;
+window.updateFundSummary = updateFundSummary;
 
 <!-- ══ FIREBASE AUTH ══ -->
 <script>
@@ -1416,6 +1527,9 @@ function initFirebase() {
   window._signOutUser  = function() {
     auth.signOut().then(function() { go('welcome'); toast('Signed out.'); });
   };
+
+  // expose setLoader globally for creditWallet
+  window.setLoader = setLoader;
 
   // ── Firebase is ready ─────────────────────────────────────
   window._fbReady = true;
