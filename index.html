@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#f7f6f3"/>
+<title>Anipay — Pay Any Bill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Inter+Tight:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<!-- Firebase with fallback CDNs -->
+<script>
+// Show Firebase load status in console
+console.log('Loading Firebase...');
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"
+  onerror="console.error('gstatic CDN failed, trying jsdelivr...');loadFirebaseFallback()"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+// Fallback to jsdelivr if gstatic fails
+function loadFirebaseFallback() {
+  var scripts = [
+    'https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.min.js',
+    'https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-auth-compat.min.js',
+    'https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-firestore-compat.min.js'
+  ];
+  scripts.forEach(function(src) {
+    var s = document.createElement('script');
+    s.src = src;
+    document.head.appendChild(s);
+  });
+}
+if (typeof firebase !== 'undefined') {
+  console.log('✅ Firebase loaded from gstatic');
+}
+</script>
+<style>
+:root{
+  --bg:#f7f6f3;
+  --bg2:#ffffff;
+  --bg3:#f0efe9;
+  --green:#1a6b3c;
+  --green2:#2d8a52;
+  --green3:#e8f4ed;
+  --green4:#c8e6d4;
+  --ink:#1a1a18;
+  --ink2:#4a4a46;
+  --ink3:#8a8a84;
+  --ink4:#bcbcb4;
+  --border:#e8e8e2;
+  --border2:#d4d4cc;
+  --amber:#c8860a;
+  --amber-bg:#fef8ec;
+  --amber-border:#f5dfa0;
+  --red:#c0392b;
+  --red-bg:#fdf0ee;
+  --mint:#1a7a6e;
+  --mint-bg:#e8f6f4;
+  --r:18px;
+  --r2:12px;
+  --r3:50px;
+  --head:'Fraunces',Georgia,serif;
+  --body:'Inter Tight',system-ui,sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.06);
+  --shadow2:0 2px 8px rgba(0,0,0,.08),0 8px 32px rgba(0,0,0,.08);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:17px}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--body);
+  max-width:430px;margin:0 auto;min-height:100vh;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+.screen{display:none;flex-direction:column;min-height:100vh}
+.screen.active{display:flex}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes popIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.u1{animation:fadeUp .45s cubic-bezier(.22,1,.36,1) both}
+.u2{animation:fadeUp .45s .06s cubic-bezier(.22,1,.36,1) both}
+.u3{animation:fadeUp .45s .12s cubic-bezier(.22,1,.36,1) both}
+.u4{animation:fadeUp .45s .18s cubic-bezier(.22,1,.36,1) both}
+.u5{animation:fadeUp .45s .24s cubic-bezier(.22,1,.36,1) both}
+.u6{animation:fadeUp .45s .30s cubic-bezier(.22,1,.36,1) both}
+
+/* ══ LOGO ══ */
+.logo-inline{display:flex;align-items:center;gap:9px;cursor:pointer}
+.logo-icon{
+  width:34px;height:34px;border-radius:10px;
+  background:var(--green);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.logo-text{font-family:var(--head);font-size:20px;font-weight:600;letter-spacing:-.3px;color:var(--ink)}
+.logo-text em{color:var(--green);font-style:normal}
+
+/* ══ SPLASH ══ */
+#splash{
+  align-items:center;justify-content:center;gap:16px;
+  background:var(--bg2);
+}
+.splash-mark{
+  width:80px;height:80px;border-radius:22px;
+  background:var(--green);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 32px rgba(26,107,60,.25);
+}
+.splash-name{font-family:var(--head);font-size:28px;font-weight:600;letter-spacing:-.5px;color:var(--ink)}
+.splash-name em{color:var(--green);font-style:normal}
+.splash-tagline{font-size:14px;color:var(--ink3);letter-spacing:.01em}
+.splash-dots{display:flex;gap:6px;margin-top:8px}
+.splash-dots span{width:6px;height:6px;border-radius:50%;background:var(--green);opacity:.3;animation:blink 1.4s ease-in-out infinite}
+.splash-dots span:nth-child(1){animation-delay:0s}
+.splash-dots span:nth-child(2){animation-delay:.2s}
+.splash-dots span:nth-child(3){animation-delay:.4s}
+
+/* ══ WELCOME ══ */
+#welcome{background:var(--bg2)}
+.welcome-body{flex:1;display:flex;flex-direction:column;padding:52px 24px 40px}
+.welcome-eyebrow{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--green3);border:1px solid var(--green4);
+  border-radius:var(--r3);padding:6px 14px;
+  font-size:13px;font-weight:600;color:var(--green);
+  margin-bottom:28px;
+}
+.welcome-eyebrow::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+.welcome-h{
+  font-family:var(--head);font-size:40px;font-weight:600;
+  line-height:1.15;letter-spacing:-.8px;margin-bottom:14px;color:var(--ink);
+}
+.welcome-h em{color:var(--green);font-style:italic}
+.welcome-sub{font-size:16px;color:var(--ink2);line-height:1.7;margin-bottom:36px}
+
+/* CASHBACK CARD ON WELCOME */
+.welcome-cb{
+  background:linear-gradient(135deg,var(--green),var(--green2));
+  border-radius:var(--r);padding:20px;margin-bottom:20px;
+  display:flex;align-items:center;gap:14px;
+  box-shadow:0 4px 20px rgba(26,107,60,.2);
+}
+.welcome-cb-icon{
+  width:48px;height:48px;border-radius:14px;
+  background:rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;
+}
+.welcome-cb-title{font-family:var(--head);font-size:18px;font-weight:600;color:#fff;margin-bottom:3px}
+.welcome-cb-sub{font-size:13px;color:rgba(255,255,255,.75);line-height:1.5}
+
+.features-row{display:flex;gap:10px;margin-bottom:28px}
+.feat{
+  flex:1;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r2);padding:14px 12px;
+}
+.feat-e{font-size:20px;margin-bottom:7px}
+.feat-t{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.feat-s{font-size:12px;color:var(--ink3);line-height:1.5}
+
+.trust-bar{
+  display:flex;align-items:center;gap:10px;
+  background:var(--amber-bg);border:1px solid var(--amber-border);
+  border-radius:var(--r2);padding:13px 16px;margin-bottom:24px;
+}
+.trust-bar-icon{font-size:18px;flex-shrink:0}
+.trust-bar-text{font-size:13px;color:var(--amber);font-weight:500;line-height:1.5}
+
+.btn-primary{
+  width:100%;background:var(--green);color:#fff;border:none;
+  border-radius:var(--r2);font-family:var(--body);font-size:16px;
+  font-weight:600;padding:17px;cursor:pointer;
+  transition:background .15s,transform .1s;
+  box-shadow:0 4px 16px rgba(26,107,60,.25);
+}
+.btn-primary:hover{background:var(--green2)}
+.btn-primary:active{transform:scale(.98)}
+.btn-secondary{
+  width:100%;background:transparent;color:var(--ink);
+  border:1.5px solid var(--border2);border-radius:var(--r2);
+  font-family:var(--body);font-size:16px;font-weight:500;
+  padding:16px;cursor:pointer;transition:background .15s;margin-top:10px;
+}
+.btn-secondary:hover{background:var(--bg3)}
+
+/* ══ AUTH ══ */
+.auth-wrap{padding:52px 24px 36px;flex:1;background:var(--bg2)}
+.back-btn{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--bg);border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:18px;margin-bottom:30px;color:var(--ink);
+  transition:border-color .2s;
+}
+.back-btn:hover{border-color:var(--border2)}
+.auth-heading{font-family:var(--head);font-size:34px;font-weight:600;line-height:1.2;letter-spacing:-.5px;margin-bottom:10px}
+.auth-heading em{color:var(--green);font-style:italic}
+.auth-sub{font-size:15px;color:var(--ink2);margin-bottom:30px;line-height:1.7}
+.field{margin-bottom:16px}
+.field-label{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:7px;display:block}
+.input-wrap{position:relative}
+.input-prefix{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  font-size:14px;color:var(--ink3);pointer-events:none;white-space:nowrap;
+}
+.inp{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:var(--r2);color:var(--ink);font-family:var(--body);
+  font-size:16px;padding:15px 16px;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.inp:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(26,107,60,.1)}
+.inp-pre{padding-left:110px!important}
+.inp-ic{padding-left:44px!important}
+.auth-alt{text-align:center;font-size:14px;color:var(--ink3);margin-top:20px}
+.auth-alt a{color:var(--green);cursor:pointer;font-weight:600;text-decoration:none}
+.otp-row{display:flex;gap:10px;margin:24px 0}
+.otp-row input{
+  flex:1;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:var(--r2);color:var(--ink);font-family:var(--head);
+  font-size:26px;font-weight:500;padding:14px 8px;text-align:center;outline:none;
+  transition:border-color .2s;
+}
+.otp-row input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(26,107,60,.1)}
+
+/* ══ TOPBAR ══ */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 22px;background:var(--bg2);
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;
+}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.notif-btn{
+  width:40px;height:40px;border-radius:50%;background:var(--bg);
+  border:1.5px solid var(--border);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;position:relative;font-size:17px;
+}
+.notif-dot{position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--red);border:2px solid var(--bg2)}
+.user-av{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--green3);border:2px solid var(--green4);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--head);font-size:15px;font-weight:600;color:var(--green);cursor:pointer;
+}
+
+/* ══ HOME ══ */
+#home{background:var(--bg);padding-bottom:96px}
+
+/* CASHBACK — HERO POSITION */
+.cashback-hero{
+  background:var(--green);
+  padding:22px;margin:16px 18px 0;
+  border-radius:var(--r);
+  display:flex;align-items:center;gap:16px;
+  box-shadow:0 4px 20px rgba(26,107,60,.2);
+  position:relative;overflow:hidden;
+}
+.cashback-hero::after{
+  content:'';position:absolute;right:-20px;top:-30px;
+  width:130px;height:130px;border-radius:50%;
+  background:rgba(255,255,255,.05);pointer-events:none;
+}
+.cb-icon-wrap{
+  width:56px;height:56px;border-radius:16px;
+  background:rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  flex-shrink:0;
+}
+.cb-label{font-size:12px;color:rgba(255,255,255,.7);font-weight:500;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.cb-amount{font-family:var(--head);font-size:30px;font-weight:600;color:#fff;line-height:1;margin-bottom:3px}
+.cb-sub{font-size:13px;color:rgba(255,255,255,.7);line-height:1.5}
+.cb-redeem{
+  margin-left:auto;flex-shrink:0;
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);
+  border-radius:var(--r3);padding:8px 14px;font-size:13px;font-weight:600;
+  color:#fff;cursor:pointer;white-space:nowrap;
+  transition:background .15s;
+}
+.cb-redeem:hover{background:rgba(255,255,255,.25)}
+
+/* WALLET */
+.wallet-wrap{padding:12px 18px 0}
+.wallet-card{
+  background:var(--bg2);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:22px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.wallet-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--green),var(--green2),#5cb87a);
+}
+.wallet-greeting{font-size:13px;color:var(--ink3);margin-bottom:2px}
+.wallet-name{font-family:var(--head);font-size:18px;font-weight:500;color:var(--ink);margin-bottom:18px}
+.wallet-bal-label{font-size:12px;color:var(--ink3);font-weight:500;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.wallet-bal{
+  font-family:var(--head);font-size:42px;font-weight:600;
+  letter-spacing:-1.5px;line-height:1;color:var(--ink);margin-bottom:20px;
+}
+.wallet-bal sub{font-size:20px;font-weight:400;vertical-align:middle;margin-right:2px;color:var(--ink2)}
+.wallet-actions{display:flex;gap:8px}
+.wa{
+  flex:1;padding:11px 8px;border-radius:10px;border:none;
+  font-family:var(--body);font-size:14px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;
+  transition:transform .1s,background .15s;
+}
+.wa:active{transform:scale(.96)}
+.wa-green{background:var(--green);color:#fff;box-shadow:0 2px 10px rgba(26,107,60,.2)}
+.wa-outline{background:var(--bg);border:1.5px solid var(--border);color:var(--ink)}
+.wa-outline:hover{background:var(--bg3)}
+
+/* SAVINGS PROOF */
+.savings-proof{
+  margin:10px 18px 0;
+  background:var(--mint-bg);border:1px solid rgba(26,122,110,.2);
+  border-radius:var(--r2);padding:13px 16px;
+  display:flex;align-items:center;gap:10px;
+}
+.savings-icon{font-size:17px;flex-shrink:0}
+.savings-text{flex:1;font-size:13px;color:var(--mint);line-height:1.5;font-weight:500}
+.savings-amount{font-family:var(--head);font-size:17px;font-weight:600;color:var(--mint);flex-shrink:0}
+
+/* SECTION */
+.section{padding:22px 18px 0}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-family:var(--head);font-size:20px;font-weight:600;letter-spacing:-.2px;color:var(--ink)}
+.section-link{font-size:14px;color:var(--green);font-weight:600;cursor:pointer}
+
+/* FEATURED TILES — big immersive grid */
+.big-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 18px}
+.big-tile{
+  border-radius:var(--r);overflow:hidden;cursor:pointer;
+  position:relative;min-height:118px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  border:1.5px solid var(--border);
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;
+}
+.big-tile:hover{transform:scale(1.02);box-shadow:var(--shadow2)}
+.big-tile:active{transform:scale(.97)}
+.tile-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:10px 18px 0}
+.tile-row-3 .bt-name{font-size:14px}
+.tile-row-3 .bt-icon{font-size:18px;margin-bottom:3px}
+.tile-row-3 .bt-sub{font-size:10px}
+.tile-row-3 .bt-body{padding:11px}
+.bt-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px;opacity:.08}
+.bt-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.35) 0%,transparent 60%)}
+.bt-body{position:relative;z-index:1;padding:14px}
+.bt-icon{font-size:22px;margin-bottom:5px}
+.bt-name{font-family:var(--head);font-size:17px;font-weight:600;color:#fff;line-height:1.2}
+.bt-sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px}
+
+/* Tile backgrounds */
+.t-elec{background:linear-gradient(145deg,#0f3d20,#1a6b3c)}
+.t-data{background:linear-gradient(145deg,#003d5c,#0066a0)}
+.t-flight{background:linear-gradient(145deg,#1a1a3d,#2d2d6b)}
+.t-cinema{background:linear-gradient(145deg,#3d0f1a,#6b1a2d)}
+.t-hotel{background:linear-gradient(145deg,#2a1f00,#6b4a00)}
+.t-cable{background:linear-gradient(145deg,#003020,#005040)}
+
+/* SMALL PILL ROW */
+.pill-row{
+  display:flex;gap:10px;padding:0 18px;
+  overflow-x:auto;scrollbar-width:none;padding-bottom:4px;
+}
+.pill-row::-webkit-scrollbar{display:none}
+.pill{
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  flex-shrink:0;cursor:pointer;
+}
+.pill-icon{
+  width:56px;height:56px;border-radius:16px;
+  background:var(--bg2);border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1),border-color .2s,background .2s;
+  box-shadow:var(--shadow);
+}
+.pill:hover .pill-icon,.pill:active .pill-icon{
+  transform:scale(1.08) translateY(-3px);
+  border-color:var(--green4);background:var(--green3);
+  box-shadow:0 6px 20px rgba(26,107,60,.15);
+}
+.pill-name{font-size:12px;color:var(--ink3);font-weight:500}
+
+/* TRANSACTIONS */
+.txn-list{padding:0 18px;display:flex;flex-direction:column}
+.txn{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer;
+  transition:opacity .15s;
+}
+.txn:last-child{border-bottom:none}
+.txn:hover{opacity:.7}
+.txn-icon{
+  width:46px;height:46px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;border:1px solid transparent;
+}
+.txn-info{flex:1;min-width:0}
+.txn-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.txn-meta{font-size:13px;color:var(--ink3)}
+.txn-right{text-align:right;flex-shrink:0}
+.txn-amount{font-family:var(--head);font-size:16px;font-weight:600;color:var(--ink)}
+.txn-date{font-size:12px;color:var(--ink4);margin-top:2px}
+.badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:var(--r3);margin-top:4px;font-weight:600}
+.badge-ok{background:var(--green3);color:var(--green);border:1px solid var(--green4)}
+.badge-pending{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+
+/* ══ BOTTOM NAV ══ */
+.bottom-nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;background:var(--bg2);
+  border-top:1px solid var(--border);
+  display:none;padding:8px 0 24px;z-index:100;
+}
+.nav-items{display:flex}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;padding:6px 0;
+}
+.nav-icon{font-size:20px;transition:transform .18s}
+.nav-label{font-size:11px;color:var(--ink4);font-weight:600;letter-spacing:.02em;transition:color .18s}
+.nav-item.active .nav-label{color:var(--green)}
+.nav-item.active .nav-icon{transform:scale(1.12)}
+.nav-pip{width:4px;height:4px;border-radius:50%;background:var(--green);margin:0 auto;opacity:0;transition:opacity .18s}
+.nav-item.active .nav-pip{opacity:1}
+
+/* ══ PAYMENT SCREEN ══ */
+#payment{background:var(--bg2);padding-bottom:96px}
+.pay-topbar{
+  display:flex;align-items:center;gap:14px;
+  padding:18px 22px;border-bottom:1px solid var(--border);
+  background:var(--bg2);sticky;top:0;
+}
+.back-circle{
+  width:40px;height:40px;border-radius:50%;background:var(--bg);
+  border:1.5px solid var(--border);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;font-size:17px;color:var(--ink);
+  flex-shrink:0;transition:border-color .2s;
+}
+.back-circle:hover{border-color:var(--border2)}
+.pay-title{font-family:var(--head);font-size:22px;font-weight:600;letter-spacing:-.2px}
+.pay-subtitle{font-size:13px;color:var(--ink3);margin-top:2px}
+.pay-body{padding:22px}
+.p-section{margin-bottom:22px}
+.p-label{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:10px;display:block}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  padding:9px 18px;border-radius:var(--r3);background:var(--bg);
+  border:1.5px solid var(--border);font-size:14px;font-weight:500;
+  cursor:pointer;color:var(--ink2);transition:all .18s;
+}
+.chip:hover{border-color:var(--green4);color:var(--green)}
+.chip.on{background:var(--green3);border-color:var(--green);color:var(--green);font-weight:600}
+.form-inp{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:var(--r2);color:var(--ink);font-family:var(--body);
+  font-size:16px;padding:15px 16px;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.form-inp:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(26,107,60,.1)}
+select.form-inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238A8A84' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
+.amount-presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.amt-chip{
+  padding:8px 16px;border-radius:var(--r3);background:var(--bg);
+  border:1.5px solid var(--border);font-size:13px;font-weight:500;
+  cursor:pointer;color:var(--ink2);transition:all .15s;
+}
+.amt-chip:hover{border-color:var(--green);color:var(--green);background:var(--green3)}
+
+/* SUMMARY */
+.summary{
+  background:var(--bg);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:18px;margin-bottom:20px;
+  overflow:hidden;position:relative;
+}
+.summary::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),#5cb87a)}
+.sum-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:15px}
+.sum-row:last-child{border-bottom:none;padding-top:13px}
+.sum-row .k{color:var(--ink2)}.sum-row .v{font-weight:600;color:var(--ink)}
+.sum-row.total .k{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3)}
+.sum-row.total .v{font-family:var(--head);font-size:22px;font-weight:600;color:var(--ink)}
+.free-tag{color:var(--green);font-weight:600}
+.cb-tag{color:var(--amber);font-weight:600}
+
+.cta-btn{
+  width:100%;background:var(--green);color:#fff;border:none;
+  border-radius:var(--r2);font-family:var(--body);font-size:16px;font-weight:600;
+  padding:18px;cursor:pointer;transition:background .15s,transform .1s;
+  box-shadow:0 4px 16px rgba(26,107,60,.25);letter-spacing:.01em;
+}
+.cta-btn:hover{background:var(--green2)}
+.cta-btn:active{transform:scale(.98)}
+.secure-line{
+  text-align:center;font-size:13px;color:var(--ink3);
+  margin-top:12px;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+
+/* ══ FUND ══ */
+#fund{background:var(--bg2);padding-bottom:96px}
+.fund-method{
+  background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);
+  padding:18px;display:flex;align-items:center;gap:14px;
+  cursor:pointer;margin-bottom:10px;transition:border-color .2s,box-shadow .2s;
+}
+.fund-method:hover,.fund-method.on{border-color:var(--green);background:var(--green3);box-shadow:0 2px 12px rgba(26,107,60,.1)}
+.fund-icon{width:44px;height:44px;border-radius:13px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.fund-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.fund-sub{font-size:13px;color:var(--ink3)}
+.fund-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.fund-method.on .fund-radio{border-color:var(--green);background:var(--green)}
+.fund-method.on .fund-radio::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+
+/* ══ HISTORY ══ */
+#history{background:var(--bg);padding-bottom:96px}
+.filter-bar{display:flex;gap:8px;padding:14px 18px;overflow-x:auto;scrollbar-width:none;background:var(--bg2);border-bottom:1px solid var(--border)}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-tab{
+  padding:8px 18px;border-radius:var(--r3);white-space:nowrap;
+  font-size:13px;font-weight:600;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--bg2);color:var(--ink3);transition:all .18s;
+}
+.filter-tab.on{background:var(--green);color:#fff;border-color:var(--green)}
+.day-label{font-size:12px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.07em;padding:12px 0 4px}
+
+/* ══ PROFILE ══ */
+#profile{background:var(--bg);padding-bottom:96px}
+.profile-head{
+  background:var(--bg2);padding:26px 22px 22px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;margin-bottom:8px;
+}
+.profile-av{
+  width:64px;height:64px;border-radius:18px;
+  background:var(--green3);border:2px solid var(--green4);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--head);font-size:22px;font-weight:600;color:var(--green);
+}
+.profile-name{font-family:var(--head);font-size:22px;font-weight:600;letter-spacing:-.2px;color:var(--ink)}
+.profile-phone{font-size:14px;color:var(--ink3);margin-top:3px}
+.verified-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--green3);border:1px solid var(--green4);
+  border-radius:var(--r3);padding:5px 12px;font-size:12px;color:var(--green);
+  margin-top:8px;font-weight:600;
+}
+.verified-badge::before{content:'✓';font-weight:700}
+.p-stats{display:flex;gap:10px;padding:0 18px 16px}
+.p-stat{
+  flex:1;background:var(--bg2);border:1.5px solid var(--border);
+  border-radius:var(--r2);padding:14px;text-align:center;
+  box-shadow:var(--shadow);
+}
+.p-stat-val{font-family:var(--head);font-size:22px;font-weight:600;color:var(--green)}
+.p-stat-label{font-size:12px;color:var(--ink3);margin-top:3px;font-weight:500}
+.menu-group{
+  background:var(--bg2);border:1.5px solid var(--border);
+  border-radius:var(--r);overflow:hidden;margin:0 18px 12px;
+  box-shadow:var(--shadow);
+}
+.menu-item{
+  display:flex;align-items:center;gap:13px;padding:16px;
+  border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;
+}
+.menu-item:last-child{border-bottom:none}
+.menu-item:hover{background:var(--bg)}
+.menu-item-icon{width:36px;height:36px;border-radius:11px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.menu-item-label{flex:1;font-size:15px;font-weight:500;color:var(--ink)}
+.menu-item-arrow{color:var(--ink4);font-size:16px}
+.signout-btn{
+  width:calc(100% - 36px);margin:0 18px 8px;
+  background:var(--red-bg);border:1.5px solid rgba(192,57,43,.2);
+  color:var(--red);border-radius:var(--r2);
+  padding:16px;font-family:var(--body);font-size:15px;font-weight:600;cursor:pointer;transition:background .15s;
+}
+.signout-btn:hover{background:#fbe8e5}
+.app-version{text-align:center;padding:14px;font-size:12px;color:var(--ink4)}
+
+/* ══ SUCCESS ══ */
+#success{background:var(--bg2);align-items:center;justify-content:center;padding:48px 24px;text-align:center}
+.success-icon{
+  width:100px;height:100px;border-radius:50%;
+  background:var(--green3);border:2px solid var(--green4);
+  display:flex;align-items:center;justify-content:center;font-size:42px;
+  margin-bottom:22px;animation:popIn .45s cubic-bezier(.175,.885,.32,1.275);
+  box-shadow:0 8px 32px rgba(26,107,60,.15);
+}
+.success-title{font-family:var(--head);font-size:30px;font-weight:600;letter-spacing:-.3px;margin-bottom:8px;color:var(--ink)}
+.success-sub{font-size:15px;color:var(--ink2);margin-bottom:28px;line-height:1.7}
+.receipt{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:20px;margin-bottom:12px;text-align:left;
+  box-shadow:var(--shadow);
+}
+.r-row{display:flex;justify-content:space-between;font-size:14px;padding:9px 0;border-bottom:1px solid var(--border)}
+.r-row:last-child{border-bottom:none}
+.r-row .k{color:var(--ink3)}.r-row .v{font-weight:600;color:var(--ink)}
+.ref-text{font-size:12px;color:var(--ink4);margin-bottom:22px;letter-spacing:.04em}
+.success-actions{display:flex;gap:10px;width:100%}
+
+/* ══ PIN MODAL ══ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(26,26,24,.6);
+  backdrop-filter:blur(6px);z-index:200;
+  display:none;align-items:flex-end;
+}
+.modal-overlay.open{display:flex}
+.modal-sheet{
+  width:100%;max-width:430px;margin:0 auto;
+  background:var(--bg2);border-radius:24px 24px 0 0;
+  border-top:1.5px solid var(--border);
+  padding:24px 24px 44px;animation:slideUp .35s cubic-bezier(.22,1,.36,1);
+}
+.modal-handle{width:38px;height:4px;border-radius:2px;background:var(--border2);margin:0 auto 22px}
+.modal-title{font-family:var(--head);font-size:24px;font-weight:600;margin-bottom:4px;letter-spacing:-.2px}
+.modal-sub{font-size:14px;color:var(--ink3);margin-bottom:16px}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin:18px 0 28px}
+.pin-dot{
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid var(--border2);transition:all .2s;
+}
+.pin-dot.filled{background:var(--green);border-color:var(--green);box-shadow:0 2px 8px rgba(26,107,60,.3)}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.num-key{
+  background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r2);
+  padding:19px 10px;font-family:var(--head);font-size:24px;font-weight:500;
+  cursor:pointer;text-align:center;color:var(--ink);transition:all .12s;user-select:none;
+}
+.num-key:active{background:var(--green3);border-color:var(--green);transform:scale(.93);color:var(--green)}
+.num-key.del{font-size:18px;color:var(--ink3)}
+.num-key.blank{visibility:hidden}
+
+/* ══ LOADER ══ */
+.loader{position:fixed;inset:0;background:rgba(247,246,243,.92);backdrop-filter:blur(8px);z-index:250;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px}
+.loader.show{display:flex}
+.loader-ring{width:50px;height:50px;border-radius:50%;border:3px solid var(--border2);border-top-color:var(--green);animation:spin .7s linear infinite}
+.loader-text{font-size:15px;color:var(--ink2);font-weight:500}
+
+/* TOAST */
+.toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:13px 24px;border-radius:var(--r3);font-size:14px;font-weight:500;z-index:300;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1}
+.toast.ok{background:var(--green);box-shadow:0 4px 16px rgba(26,107,60,.3)}
+
+/* Divider */
+.divider{height:8px;background:var(--bg);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<!-- ══ SPLASH ══ -->
+<div class="screen active" id="splash">
+  <div class="splash-mark">
+    <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+      <path d="M22 6L36 38H26L22 26L18 38H8L22 6Z" fill="white" opacity="0.95"/>
+      <path d="M19 24L22 14L25 24H19Z" fill="#1a6b3c"/>
+      <rect x="12" y="40" width="20" height="2" rx="1" fill="white" opacity="0.4"/>
+    </svg>
+  </div>
+  <div class="splash-name">Ani<em>pay</em></div>
+  <div class="splash-tagline">Pay any bill. Earn always.</div>
+  <div class="splash-dots">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+
+<!-- ══ WELCOME ══ -->
+<div class="screen" id="welcome">
+  <div class="welcome-body">
+    <!-- LOGO AT TOP OF WELCOME -->
+    <div class="u1" style="display:flex;align-items:center;gap:10px;margin-bottom:32px">
+      <div style="width:42px;height:42px;border-radius:13px;background:var(--green);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(26,107,60,.25);flex-shrink:0">
+        <svg width="24" height="24" viewBox="0 0 44 44" fill="none">
+          <path d="M22 4L37 40H27L22 24L17 40H7L22 4Z" fill="white" opacity=".95"/>
+          <path d="M19 22L22 12L25 22H19Z" fill="#1a6b3c"/>
+        </svg>
+      </div>
+      <span style="font-family:var(--head);font-size:26px;font-weight:600;letter-spacing:-.4px;color:var(--ink)">Ani<em style="color:var(--green);font-style:normal">pay</em></span>
+    </div>
+    <div class="welcome-eyebrow u1">Licensed & secure · CBN compliant</div>
+    <div class="welcome-h u1">The smarter way<br/>to pay <em>every bill</em></div>
+    <div class="welcome-sub u2">Electricity, data, flights, cinema tickets and more — all in one place, with the lowest rates in Nigeria.</div>
+
+    <div class="welcome-cb u2">
+      <div class="welcome-cb-icon">🎁</div>
+      <div>
+        <div class="welcome-cb-title">Earn cashback on every payment</div>
+        <div class="welcome-cb-sub">No conditions. Every bill you pay puts money back in your pocket.</div>
+      </div>
+    </div>
+
+    <div class="features-row u3">
+      <div class="feat">
+        <div class="feat-e">⚡</div>
+        <div class="feat-t">Instant</div>
+        <div class="feat-s">Confirmed in seconds</div>
+      </div>
+      <div class="feat">
+        <div class="feat-e">💸</div>
+        <div class="feat-t">Lowest rates</div>
+        <div class="feat-s">Zero service fees</div>
+      </div>
+      <div class="feat">
+        <div class="feat-e">🔒</div>
+        <div class="feat-t">Secure</div>
+        <div class="feat-s">Bank-grade encryption</div>
+      </div>
+    </div>
+
+    <div class="trust-bar u3">
+      <div class="trust-bar-icon">🏦</div>
+      <div class="trust-bar-text">Your wallet and transactions are protected. We never store your card details.</div>
+    </div>
+
+    <div class="u4">
+      <button class="btn-primary" onclick="go('reg')">Create free account →</button>
+      <button class="btn-secondary" onclick="go('login')">I already have an account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REGISTER ══ -->
+<div class="screen" id="reg">
+  <div class="auth-wrap">
+    <div class="back-btn u1" onclick="go('welcome')">←</div>
+    <div class="u1" style="display:flex;align-items:center;gap:9px;margin-bottom:20px">
+      <div style="width:34px;height:34px;border-radius:10px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="19" height="19" viewBox="0 0 44 44" fill="none"><path d="M22 4L37 40H27L22 24L17 40H7L22 4Z" fill="white" opacity=".95"/><path d="M19 22L22 12L25 22H19Z" fill="#1a6b3c"/></svg>
+      </div>
+      <span style="font-family:var(--head);font-size:20px;font-weight:600;letter-spacing:-.3px;color:var(--ink)">Ani<em style="color:var(--green);font-style:normal">pay</em></span>
+    </div>
+    <div class="auth-heading u1">Create your<br/><em>account</em></div>
+    <div class="auth-sub u2">Thousands of Nigerians pay smarter with Anipay every day.</div>
+    <div class="field u3"><label class="field-label">Full name</label><input id="reg-name" class="inp" type="text" placeholder="e.g. Adaeze Okonkwo"/></div>
+    <div class="field u3"><label class="field-label">Phone number</label><div class="input-wrap"><span class="input-prefix">🇳🇬 +234 |</span><input id="reg-phone" class="inp inp-pre" type="tel" placeholder="8012345678" maxlength="10"/></div></div>
+    <div class="field u3"><label class="field-label">Create 4-digit PIN</label><div class="input-wrap"><span class="input-prefix" style="left:14px">🔒</span><input id="reg-pin" class="inp inp-ic" type="password" maxlength="4" placeholder="••••"/></div></div>
+    <button id="send-otp-btn-reg" class="btn-primary u4" onclick="sendOTP('reg')" style="margin-top:8px">Send verification code →</button>
+    <div class="auth-alt">Have an account? <a onclick="go('login')">Sign in</a></div>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div class="screen" id="login">
+  <div class="auth-wrap">
+    <div class="back-btn u1" onclick="go('welcome')">←</div>
+    <div class="u1" style="display:flex;align-items:center;gap:9px;margin-bottom:20px">
+      <div style="width:34px;height:34px;border-radius:10px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="19" height="19" viewBox="0 0 44 44" fill="none"><path d="M22 4L37 40H27L22 24L17 40H7L22 4Z" fill="white" opacity=".95"/><path d="M19 22L22 12L25 22H19Z" fill="#1a6b3c"/></svg>
+      </div>
+      <span style="font-family:var(--head);font-size:20px;font-weight:600;letter-spacing:-.3px;color:var(--ink)">Ani<em style="color:var(--green);font-style:normal">pay</em></span>
+    </div>
+    <div class="auth-heading u1">Welcome<br/><em>back 👋</em></div>
+    <div class="auth-sub u2">Good to see you. Sign in to continue.</div>
+    <div class="field u3"><label class="field-label">Phone number</label><div class="input-wrap"><span class="input-prefix">🇳🇬 +234 |</span><input id="login-phone" class="inp inp-pre" type="tel" placeholder="8012345678" maxlength="10"/></div></div>
+    <div class="field u3"><label class="field-label">PIN</label><div class="input-wrap"><span class="input-prefix" style="left:14px">🔒</span><input id="login-pin" class="inp inp-ic" type="password" maxlength="4" placeholder="••••"/></div></div>
+    <button id="send-otp-btn-login" class="btn-primary u4" onclick="sendOTP('login')" style="margin-top:8px">Send verification code →</button>
+    <div class="auth-alt">New to Anipay? <a onclick="go('reg')">Create account</a></div>
+  </div>
+</div>
+
+<!-- ══ OTP ══ -->
+<div class="screen" id="otp">
+  <div class="auth-wrap">
+    <div class="back-btn u1" onclick="go('reg')">←</div>
+    <div class="u1" style="display:flex;align-items:center;gap:9px;margin-bottom:20px">
+      <div style="width:34px;height:34px;border-radius:10px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="19" height="19" viewBox="0 0 44 44" fill="none"><path d="M22 4L37 40H27L22 24L17 40H7L22 4Z" fill="white" opacity=".95"/><path d="M19 22L22 12L25 22H19Z" fill="#1a6b3c"/></svg>
+      </div>
+      <span style="font-family:var(--head);font-size:20px;font-weight:600;letter-spacing:-.3px;color:var(--ink)">Ani<em style="color:var(--green);font-style:normal">pay</em></span>
+    </div>
+    <div class="auth-heading u1">Enter the<br/><em>OTP code</em></div>
+    <div class="auth-sub u2">We sent a 6-digit code to <strong id="otp-phone-display" style="color:var(--green)">your phone</strong>. Enter it below.</div>
+    <div class="otp-row u3">
+      <input type="text" inputmode="numeric" maxlength="1" oninput="oN(this,0)"/>
+      <input type="text" inputmode="numeric" maxlength="1" oninput="oN(this,1)"/>
+      <input type="text" inputmode="numeric" maxlength="1" oninput="oN(this,2)"/>
+      <input type="text" inputmode="numeric" maxlength="1" oninput="oN(this,3)"/>
+      <input type="text" inputmode="numeric" maxlength="1" oninput="oN(this,4)"/>
+      <input type="text" inputmode="numeric" maxlength="1" oninput="oN(this,5)"/>
+    </div>
+    <button class="btn-primary u4" onclick="verifyOTP()">Verify & continue →</button>
+    <div class="auth-alt" style="margin-top:16px">
+      Didn't receive it? 
+      <a id="resend-btn" onclick="resendOTP()">Resend code<span id="resend-timer"></span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HOME ══ -->
+<div class="screen" id="home" style="background:var(--bg);padding-bottom:100px">
+
+  <div class="topbar u1">
+    <div class="logo-inline">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 44 44" fill="none">
+          <path d="M22 4L37 40H27L22 24L17 40H7L22 4Z" fill="white" opacity=".95"/>
+          <path d="M19 22L22 12L25 22H19Z" fill="#1a6b3c"/>
+        </svg>
+      </div>
+      <div class="logo-text">Ani<em>pay</em></div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+      <div class="user-av" onclick="go('profile')">AD</div>
+    </div>
+  </div>
+
+  <!-- CASHBACK — FIRST -->
+  <div class="cashback-hero u2">
+    <div class="cb-icon-wrap">🎁</div>
+    <div style="flex:1">
+      <div class="cb-label">Your cashback balance</div>
+      <div class="cb-amount" id="cb-amount-display">₦0.00</div>
+      <div class="cb-sub">+₦80 from yesterday · Earns with every payment</div>
+    </div>
+    <div class="cb-redeem">Redeem</div>
+  </div>
+
+  <!-- WALLET -->
+  <div class="wallet-wrap u3">
+    <div class="wallet-card">
+      <div class="wallet-greeting">Good day,</div>
+      <div class="wallet-name">Aniela's Dad 👋</div>
+      <div class="wallet-bal-label">Wallet balance</div>
+      <div class="wallet-bal"><sub>₦</sub><span id="wallet-bal-display">0</span><span style="font-size:22px;color:var(--ink3)">.00</span></div>
+      <div class="wallet-actions">
+        <button class="wa wa-green" onclick="go('fund')">＋ Fund wallet</button>
+        <button class="wa wa-outline">↗ Transfer</button>
+        <button class="wa wa-outline">⋯ More</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVINGS PROOF -->
+  <div class="savings-proof u3">
+    <div class="savings-icon">📊</div>
+    <div class="savings-text">You've saved <strong>₦2,340</strong> this month compared to banking apps</div>
+    <div class="savings-amount">₦2.3k</div>
+  </div>
+
+  <!-- BIG TILES -->
+  <div class="section u4">
+    <div class="section-head">
+      <div class="section-title">Pay a bill</div>
+    </div>
+  </div>
+  <div class="big-grid u4">
+    <div class="big-tile t-elec" onclick="oP('electricity')">
+      <div class="bt-bg">⚡</div><div class="bt-overlay"></div>
+      <div class="bt-body"><div class="bt-icon">⚡</div><div class="bt-name">Electricity</div><div class="bt-sub">AEDC · IKEDC · PHEDC +3</div></div>
+    </div>
+    <div class="big-tile t-data" onclick="oP('data')">
+      <div class="bt-bg">📶</div><div class="bt-overlay"></div>
+      <div class="bt-body"><div class="bt-icon">📶</div><div class="bt-name">Data & Airtime</div><div class="bt-sub">MTN · Airtel · Glo · 9mobile</div></div>
+    </div>
+    <div class="big-tile t-flight" onclick="oP('flight')">
+      <div class="bt-bg">✈️</div><div class="bt-overlay"></div>
+      <div class="bt-body"><div class="bt-icon">✈️</div><div class="bt-name">Flight Tickets</div><div class="bt-sub">Air Peace · Ibom · United</div></div>
+    </div>
+    <div class="big-tile t-cinema" onclick="oP('cinema')">
+      <div class="bt-bg">🎬</div><div class="bt-overlay"></div>
+      <div class="bt-body"><div class="bt-icon">🎬</div><div class="bt-name">Cinema Tickets</div><div class="bt-sub">Genesis · FilmHouse · Silverbird</div></div>
+    </div>
+  </div>
+  <!-- SECOND ROW — 3 columns -->
+  <div class="tile-row-3 u4">
+    <div class="big-tile t-hotel" onclick="oP('hotel')">
+      <div class="bt-bg">🏨</div><div class="bt-overlay"></div>
+      <div class="bt-body"><div class="bt-icon">🏨</div><div class="bt-name">Hotel</div><div class="bt-sub">Top hotels NG</div></div>
+    </div>
+    <div class="big-tile t-cable" onclick="oP('tv')">
+      <div class="bt-bg">📺</div><div class="bt-overlay"></div>
+      <div class="bt-body"><div class="bt-icon">📺</div><div class="bt-name">Cable TV</div><div class="bt-sub">DSTV · GOtv</div></div>
+    </div>
+    <div class="big-tile" style="background:linear-gradient(145deg,#1a0f2e,#2e1a50)" onclick="oP('betting')">
+      <div class="bt-bg">🎯</div><div class="bt-overlay"></div>
+      <div class="bt-body"><div class="bt-icon">🎯</div><div class="bt-name">Betting</div><div class="bt-sub">Bet9ja · 1xBet</div></div>
+    </div>
+  </div>
+
+  <!-- MORE SERVICES -->
+  <div class="section u5">
+    <div class="section-head">
+      <div class="section-title">More services</div>
+    </div>
+  </div>
+  <div class="pill-row u5">
+    <div class="pill" onclick="oP('water')"><div class="pill-icon">💧</div><div class="pill-name">Water</div></div>
+    <div class="pill" onclick="oP('internet')"><div class="pill-icon">🌐</div><div class="pill-name">Internet</div></div>
+    <div class="pill" onclick="oP('jamb')"><div class="pill-icon">🎓</div><div class="pill-name">JAMB</div></div>
+    <div class="pill" onclick="oP('waec')"><div class="pill-icon">📝</div><div class="pill-name">WAEC</div></div>
+    <div class="pill" onclick="oP('insurance')"><div class="pill-icon">🛡️</div><div class="pill-name">Insurance</div></div>
+    <div class="pill" onclick="oP('hospital')"><div class="pill-icon">🏥</div><div class="pill-name">Hospital</div></div>
+    <div class="pill" onclick="oP('more')"><div class="pill-icon" style="font-size:20px;color:var(--ink4)">···</div><div class="pill-name">More</div></div>
+  </div>
+
+  <div class="divider" style="margin-top:22px"></div>
+
+  <!-- RECENT -->
+  <div class="section u6">
+    <div class="section-head">
+      <div class="section-title">Recent transactions</div>
+      <div class="section-link" onclick="go('history')">See all</div>
+    </div>
+  </div>
+  <div class="txn-list u6">
+    <div class="txn">
+      <div class="txn-icon" style="background:#e8f4ed;border-color:#c8e6d4">⚡</div>
+      <div class="txn-info"><div class="txn-name">AEDC Prepaid</div><div class="txn-meta">Token delivered · 04159302881</div></div>
+      <div class="txn-right"><div class="txn-amount">₦5,000</div><div class="txn-date">Today, 9:42am</div><span class="badge badge-ok">Confirmed</span></div>
+    </div>
+    <div class="txn">
+      <div class="txn-icon" style="background:#e8f0fd;border-color:#c5d8fb">📶</div>
+      <div class="txn-info"><div class="txn-name">MTN 10GB Data</div><div class="txn-meta">Activated · 08012345678</div></div>
+      <div class="txn-right"><div class="txn-amount">₦3,500</div><div class="txn-date">Yesterday</div><span class="badge badge-ok">Confirmed</span></div>
+    </div>
+    <div class="txn">
+      <div class="txn-icon" style="background:#eeeef8;border-color:#d4d4f0">✈️</div>
+      <div class="txn-info"><div class="txn-name">Air Peace · ABV → LOS</div><div class="txn-meta">E-ticket sent to email</div></div>
+      <div class="txn-right"><div class="txn-amount">₦45,000</div><div class="txn-date">Apr 8</div><span class="badge badge-ok">Confirmed</span></div>
+    </div>
+    <div class="txn">
+      <div class="txn-icon" style="background:#fdeef0;border-color:#f5c8ce">🎬</div>
+      <div class="txn-info"><div class="txn-name">Genesis Cinema · 2 seats</div><div class="txn-meta">Transformers · Sat 3:00pm</div></div>
+      <div class="txn-right"><div class="txn-amount">₦5,400</div><div class="txn-date">Apr 7</div><span class="badge badge-ok">Confirmed</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAYMENT ══ -->
+<div class="screen" id="payment">
+  <div class="pay-topbar">
+    <div class="back-circle" onclick="go('home')">←</div>
+    <div><div class="pay-title" id="pt">Electricity</div><div class="pay-subtitle" id="ps">Zero fees · Confirmed instantly</div></div>
+  </div>
+  <div class="pay-body">
+    <div class="p-section"><label class="p-label">Select provider</label><div class="chips" id="pchips"></div></div>
+    <div class="p-section" id="mtsec" style="display:none"><label class="p-label">Meter type</label><select class="form-inp"><option>Prepaid</option><option>Postpaid</option></select></div>
+    <div class="p-section" id="date-sec" style="display:none"><label class="p-label">Travel date</label><input class="form-inp" type="date"/></div>
+    <div class="p-section"><label class="p-label" id="rl">Meter number</label><input class="form-inp" id="ri" type="text" placeholder=""/></div>
+    <div class="p-section">
+      <label class="p-label">Amount (₦)</label>
+      <input class="form-inp" id="ai" type="number" placeholder="Enter amount" oninput="cS()"/>
+      <div class="amount-presets" id="apc"></div>
+    </div>
+    <div class="summary" id="sumcard" style="display:none">
+      <div class="sum-row"><span class="k">Amount</span><span class="v" id="sa">—</span></div>
+      <div class="sum-row"><span class="k">Cashback you'll earn</span><span class="v cb-tag" id="scb">—</span></div>
+      <div class="sum-row"><span class="k">Service fee</span><span class="v free-tag">₦0.00 — Free</span></div>
+      <div class="sum-row total"><span class="k">Total payable</span><span class="v" id="st">—</span></div>
+    </div>
+    <button class="cta-btn" onclick="oPn()">Pay now — Zero fees</button>
+    <div class="secure-line">🔒 Secured by 256-bit encryption · Powered by Paystack</div>
+  </div>
+</div>
+
+<!-- ══ FUND ══ -->
+<div class="screen" id="fund" style="background:var(--bg2)">
+  <div class="pay-topbar"><div class="back-circle" onclick="go('home')">←</div><div><div class="pay-title">Fund wallet</div><div class="pay-subtitle">Instant · No deposit fees</div></div></div>
+  <div class="pay-body">
+    <div class="p-section">
+      <label class="p-label">Amount (₦)</label>
+      <input class="form-inp" type="number" placeholder="e.g. 5,000"/>
+      <div class="amount-presets">
+        <div class="amt-chip">₦1,000</div><div class="amt-chip">₦2,000</div>
+        <div class="amt-chip">₦5,000</div><div class="amt-chip">₦10,000</div>
+        <div class="amt-chip">₦20,000</div><div class="amt-chip">₦50,000</div>
+      </div>
+    </div>
+    <label class="p-label" style="display:block;margin-bottom:12px">How would you like to pay?</label>
+    <div class="fund-method on" onclick="sF(this)">
+      <div class="fund-icon">💳</div>
+      <div style="flex:1"><div class="fund-name">Debit card / Bank transfer</div><div class="fund-sub">Instant — powered by Paystack</div></div>
+      <div class="fund-radio"></div>
+    </div>
+    <div class="fund-method" onclick="sF(this)">
+      <div class="fund-icon">📲</div>
+      <div style="flex:1"><div class="fund-name">USSD (*737# · *901# · *822#)</div><div class="fund-sub">Works without internet</div></div>
+      <div class="fund-radio"></div>
+    </div>
+    <div class="fund-method" onclick="sF(this)">
+      <div class="fund-icon">🏦</div>
+      <div style="flex:1"><div class="fund-name">Opay / PalmPay transfer</div><div class="fund-sub">Transfer to your Anipay virtual account</div></div>
+      <div class="fund-radio"></div>
+    </div>
+    <button class="cta-btn" style="margin-top:20px">Proceed to payment →</button>
+    <div class="secure-line" style="margin-top:10px">No funding fees · Balance credited instantly</div>
+  </div>
+</div>
+
+<!-- ══ HISTORY ══ -->
+<div class="screen" id="history">
+  <div class="pay-topbar" style="background:var(--bg2)"><div class="back-circle" onclick="go('home')">←</div><div><div class="pay-title">Transaction history</div><div class="pay-subtitle">All your payments</div></div></div>
+  <div class="filter-bar">
+    <div class="filter-tab on" onclick="fT(this)">All</div>
+    <div class="filter-tab" onclick="fT(this)">Electricity</div>
+    <div class="filter-tab" onclick="fT(this)">Data</div>
+    <div class="filter-tab" onclick="fT(this)">Flights</div>
+    <div class="filter-tab" onclick="fT(this)">Cinema</div>
+    <div class="filter-tab" onclick="fT(this)">Cable TV</div>
+    <div class="filter-tab" onclick="fT(this)">Others</div>
+  </div>
+  <div class="txn-list" style="padding:0 18px">
+    <div class="day-label">Today</div>
+    <div class="txn"><div class="txn-icon" style="background:#e8f4ed;border-color:#c8e6d4">⚡</div><div class="txn-info"><div class="txn-name">AEDC Prepaid</div><div class="txn-meta">Token: 4521-8832-1129-4421</div></div><div class="txn-right"><div class="txn-amount">₦5,000</div><div class="txn-date">9:42am</div><span class="badge badge-ok">Confirmed</span></div></div>
+    <div class="day-label">Yesterday</div>
+    <div class="txn"><div class="txn-icon" style="background:#e8f0fd;border-color:#c5d8fb">📶</div><div class="txn-info"><div class="txn-name">MTN 10GB Data</div><div class="txn-meta">08012345678 · Activated</div></div><div class="txn-right"><div class="txn-amount">₦3,500</div><div class="txn-date">2:15pm</div><span class="badge badge-ok">Confirmed</span></div></div>
+    <div class="txn"><div class="txn-icon" style="background:#fdf0ee;border-color:#f5c8c0">📞</div><div class="txn-info"><div class="txn-name">Airtel Airtime</div><div class="txn-meta">07098765432</div></div><div class="txn-right"><div class="txn-amount">₦500</div><div class="txn-date">11:03am</div><span class="badge badge-ok">Confirmed</span></div></div>
+    <div class="day-label">Apr 8</div>
+    <div class="txn"><div class="txn-icon" style="background:#eeeef8;border-color:#d4d4f0">✈️</div><div class="txn-info"><div class="txn-name">Air Peace · ABV → LOS</div><div class="txn-meta">E-ticket: AP-20250408-4421</div></div><div class="txn-right"><div class="txn-amount">₦45,000</div><div class="txn-date">10:00am</div><span class="badge badge-ok">Confirmed</span></div></div>
+    <div class="day-label">Apr 7</div>
+    <div class="txn"><div class="txn-icon" style="background:#fdeef0;border-color:#f5c8ce">🎬</div><div class="txn-info"><div class="txn-name">Genesis Cinema · 2 seats</div><div class="txn-meta">Transformers · Sat 3:00pm · Row F</div></div><div class="txn-right"><div class="txn-amount">₦5,400</div><div class="txn-date">8:20pm</div><span class="badge badge-ok">Confirmed</span></div></div>
+    <div class="txn"><div class="txn-icon" style="background:#fef8ec;border-color:#f5dfa0">📺</div><div class="txn-info"><div class="txn-name">DSTV Compact</div><div class="txn-meta">Smart card · 7012345678</div></div><div class="txn-right"><div class="txn-amount">₦9,900</div><div class="txn-date">6:10pm</div><span class="badge badge-ok">Confirmed</span></div></div>
+    <div class="txn"><div class="txn-icon" style="background:#e8f6f4;border-color:#b8e8e2">💧</div><div class="txn-info"><div class="txn-name">ASWC Water Bill</div><div class="txn-meta">Acct · 123456789</div></div><div class="txn-right"><div class="txn-amount">₦1,500</div><div class="txn-date">3:12pm</div><span class="badge badge-pending">Pending</span></div></div>
+  </div>
+</div>
+
+<!-- ══ PROFILE ══ -->
+<div class="screen" id="profile">
+  <div class="profile-head u1">
+    <div class="profile-av">AD</div>
+    <div>
+      <div class="profile-name">Aniela's Dad</div>
+      <div class="profile-phone">+234 801 234 5678</div>
+      <div class="verified-badge">Verified account</div>
+    </div>
+  </div>
+  <div class="p-stats u2">
+    <div class="p-stat"><div class="p-stat-val">16</div><div class="p-stat-label">Bills paid</div></div>
+    <div class="p-stat"><div class="p-stat-val">₦480</div><div class="p-stat-label">Cashback</div></div>
+    <div class="p-stat"><div class="p-stat-val">₦2.3k</div><div class="p-stat-label">Saved</div></div>
+  </div>
+  <div class="menu-group u3">
+    <div class="menu-item"><div class="menu-item-icon">👤</div><div class="menu-item-label">Edit profile</div><div class="menu-item-arrow">›</div></div>
+    <div class="menu-item"><div class="menu-item-icon">🔒</div><div class="menu-item-label">Change PIN</div><div class="menu-item-arrow">›</div></div>
+    <div class="menu-item"><div class="menu-item-icon">🏦</div><div class="menu-item-label">Bank accounts</div><div class="menu-item-arrow">›</div></div>
+    <div class="menu-item"><div class="menu-item-icon">🪪</div><div class="menu-item-label">BVN / NIN verification</div><div class="menu-item-arrow">›</div></div>
+  </div>
+  <div class="menu-group u4">
+    <div class="menu-item"><div class="menu-item-icon">🎁</div><div class="menu-item-label">Cashback & rewards</div><div class="menu-item-arrow">›</div></div>
+    <div class="menu-item"><div class="menu-item-icon">👥</div><div class="menu-item-label">Refer & earn</div><div class="menu-item-arrow">›</div></div>
+    <div class="menu-item"><div class="menu-item-icon">📊</div><div class="menu-item-label">Spending insights</div><div class="menu-item-arrow">›</div></div>
+  </div>
+  <div class="menu-group u5">
+    <div class="menu-item"><div class="menu-item-icon">🆘</div><div class="menu-item-label">Help & support</div><div class="menu-item-arrow">›</div></div>
+    <div class="menu-item"><div class="menu-item-icon">📜</div><div class="menu-item-label">Terms & privacy policy</div><div class="menu-item-arrow">›</div></div>
+  </div>
+  <button class="signout-btn" onclick="signOutUser()">Sign out</button>
+  <div class="app-version">Anipay v1.0 · Built with ♥ in Nigeria 🇳🇬</div>
+</div>
+
+<!-- ══ SUCCESS ══ -->
+<div class="screen" id="success" style="background:var(--bg2)">
+  <div class="success-icon">✓</div>
+  <div class="success-title">Payment confirmed!</div>
+  <div class="success-sub" id="ssub">Your payment has been processed.<br/>Confirmation delivered instantly.</div>
+  <div class="receipt">
+    <div class="r-row"><span class="k">Service</span><span class="v" id="rsvc">—</span></div>
+    <div class="r-row"><span class="k">Provider</span><span class="v" id="rprov">—</span></div>
+    <div class="r-row"><span class="k">Amount paid</span><span class="v" id="ramt">—</span></div>
+    <div class="r-row"><span class="k">Cashback earned</span><span class="v" style="color:var(--amber)" id="rcb">—</span></div>
+    <div class="r-row"><span class="k">Service fee</span><span class="v" style="color:var(--green)">₦0.00 (Free)</span></div>
+    <div class="r-row"><span class="k">Status</span><span class="v" style="color:var(--green)">✓ Confirmed</span></div>
+    <div class="r-row"><span class="k">Date & time</span><span class="v" id="rdate">—</span></div>
+  </div>
+  <div class="ref-text" id="rref">REF: —</div>
+  <div class="success-actions">
+    <button class="btn-secondary" style="flex:1" onclick="toast('Receipt saved',true)">Save receipt</button>
+    <button class="btn-primary" style="flex:1" onclick="go('home')">Done</button>
+  </div>
+</div>
+
+<!-- ══ NAV ══ -->
+<div class="bottom-nav" id="bnav">
+  <div class="nav-items">
+    <div class="nav-item active" onclick="nG('home',this)"><div class="nav-icon">🏠</div><div class="nav-pip"></div><div class="nav-label">Home</div></div>
+    <div class="nav-item" onclick="nG('history',this)"><div class="nav-icon">📋</div><div class="nav-pip"></div><div class="nav-label">History</div></div>
+    <div class="nav-item" onclick="nG('fund',this)"><div class="nav-icon">💰</div><div class="nav-pip"></div><div class="nav-label">Wallet</div></div>
+    <div class="nav-item" onclick="nG('profile',this)"><div class="nav-icon">👤</div><div class="nav-pip"></div><div class="nav-label">Profile</div></div>
+  </div>
+</div>
+
+<!-- ══ PIN ══ -->
+<div class="modal-overlay" id="modal" onclick="cPin(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Confirm payment</div>
+    <div class="modal-sub">Enter your 4-digit Anipay PIN to authorise this payment</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="numpad">
+      <div class="num-key" onclick="pp('1')">1</div><div class="num-key" onclick="pp('2')">2</div><div class="num-key" onclick="pp('3')">3</div>
+      <div class="num-key" onclick="pp('4')">4</div><div class="num-key" onclick="pp('5')">5</div><div class="num-key" onclick="pp('6')">6</div>
+      <div class="num-key" onclick="pp('7')">7</div><div class="num-key" onclick="pp('8')">8</div><div class="num-key" onclick="pp('9')">9</div>
+      <div class="num-key blank"></div><div class="num-key" onclick="pp('0')">0</div><div class="num-key del" onclick="pd2()">⌫</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADER -->
+<div class="loader" id="ldr">
+  <div class="loader-ring"></div>
+  <div class="loader-text" id="auth-loader-txt">Processing your payment…</div>
+</div>
+<div class="toast" id="tst"></div>
+
+<script>
+const PC={
+  electricity:{t:'Electricity',s:'Token delivered to your meter · Zero fees',r:'Meter number',p:'e.g. 04159302881',pr:[500,1000,2000,5000,10000],pv:['AEDC','IKEDC','EKEDC','BEDC','PHEDC','KEDCO'],m:true},
+  data:{t:'Data subscription',s:'Activated on your line · Zero fees',r:'Phone number',p:'08012345678',pr:[200,500,1000,2000,3500],pv:['MTN','Airtel','Glo','9mobile']},
+  airtime:{t:'Airtime top-up',s:'Credited in seconds · Zero fees',r:'Phone number',p:'08012345678',pr:[100,200,500,1000,2000],pv:['MTN','Airtel','Glo','9mobile']},
+  tv:{t:'Cable TV',s:'Subscription renewed instantly · Zero fees',r:'Smart card / IUC number',p:'e.g. 7012345678',pr:[3600,6200,9900,15800],pv:['DSTV','GOtv','Startimes','ShowMax']},
+  flight:{t:'Flight tickets',s:'E-ticket sent to your email instantly',r:'Passenger name',p:'e.g. Adaeze Okonkwo',pr:[25000,45000,75000,120000],pv:['Air Peace','Ibom Air','United Airlines','Ethiopian'],d:true},
+  cinema:{t:'Cinema tickets',s:'QR code sent to your phone instantly',r:'Phone number',p:'08012345678',pr:[2700,5400,8100],pv:['Genesis Cinema','FilmHouse','Silverbird','Ozone']},
+  water:{t:'Water bill',s:'Payment confirmed instantly · Zero fees',r:'Account number',p:'e.g. 123456789',pr:[500,1000,2000,5000],pv:['LSWC','ASWC','Rivers SWBA','RUWASA']},
+  internet:{t:'Internet subscription',s:'Renewed on your account instantly',r:'Account ID',p:'e.g. SP-123456',pr:[1500,3000,5000,10000],pv:['Spectranet','Smile','ipNX','Swift']},
+  betting:{t:'Betting wallet',s:'Credited to your betting account instantly',r:'Betting user ID',p:'e.g. BJ12345678',pr:[500,1000,2000,5000,10000],pv:['Bet9ja','Sportybet','1xBet','BetKing']},
+  jamb:{t:'JAMB payment',s:'Confirmation sent to your phone instantly',r:'Registration number',p:'e.g. 12345678AB',pr:[3500,5000],pv:['JAMB Direct']},
+  waec:{t:'WAEC payment',s:'Scratch card delivered to your phone instantly',r:'Candidate number',p:'e.g. 4230101001',pr:[22000],pv:['WAEC Direct']},
+  insurance:{t:'Insurance premium',s:'Policy renewed and confirmed instantly',r:'Policy number',p:'e.g. POL-123456',pr:[1000,2500,5000],pv:['Leadway','AXA Mansard','Coronation']},
+  hospital:{t:'Hospital bill',s:'Receipt sent to your phone instantly',r:'Patient / Bill ID',p:'e.g. PAT-001234',pr:[2000,5000,10000],pv:['UCH Ibadan','LASUTH','NAUTH Nnewi','Memfys']},
+  hotel:{t:'Hotel booking',s:'Booking confirmation sent to your email',r:'Guest name',p:'e.g. Adaeze Okonkwo',pr:[15000,30000,60000],pv:['Transcorp Hilton','Sheraton Lagos','Radisson Ikeja','Four Points']},
+  more:{t:'Other services',s:'Confirmation delivered instantly',r:'Reference number',p:'Enter reference',pr:[500,1000,2000,5000],pv:['NIN Slip','Passport','Vehicle licence','Court fees']}
+};
+
+let cc='electricity',cp='',pin='';
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('bnav').style.display=['home','history','fund','profile'].includes(id)?'flex':'none';
+  window.scrollTo(0,0);
+}
+function nG(id,el){
+  go(id);
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+}
+function oP(cat){
+  cc=cat;const c=PC[cat];
+  document.getElementById('pt').textContent=c.t;
+  document.getElementById('ps').textContent=c.s;
+  document.getElementById('rl').textContent=c.r;
+  document.getElementById('ri').placeholder=c.p;
+  document.getElementById('ri').value='';
+  document.getElementById('ai').value='';
+  document.getElementById('sumcard').style.display='none';
+  document.getElementById('mtsec').style.display=c.m?'block':'none';
+  document.getElementById('date-sec').style.display=c.d?'block':'none';
+  document.getElementById('pchips').innerHTML=c.pv.map((p,i)=>`<div class="chip${i===0?' on':''}" onclick="sP(this)">${p}</div>`).join('');
+  cp=c.pv[0];
+  document.getElementById('apc').innerHTML=c.pr.map(p=>`<div class="amt-chip" onclick="sA(${p})">₦${p.toLocaleString()}</div>`).join('');
+  go('payment');
+}
+function sP(el){document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');cp=el.textContent}
+function sA(v){document.getElementById('ai').value=v;cS()}
+function cS(){
+  const v=parseInt(document.getElementById('ai').value)||0;
+  const s=document.getElementById('sumcard');
+  if(v>0){
+    s.style.display='block';
+    const cb=Math.round(v*0.01);
+    document.getElementById('sa').textContent='₦'+v.toLocaleString()+'.00';
+    document.getElementById('scb').textContent='+₦'+cb.toLocaleString()+' cashback';
+    document.getElementById('st').textContent='₦'+v.toLocaleString()+'.00';
+  }else s.style.display='none';
+}
+function oPn(){
+  if(!document.getElementById('ai').value||parseInt(document.getElementById('ai').value)<100){toast('Please enter a valid amount');return}
+  pin='';uD();document.getElementById('modal').classList.add('open');
+}
+function cPin(e){document.getElementById('modal').classList.remove('open')}
+function pp(d){
+  if(pin.length>=4)return;pin+=d;uD();
+  if(pin.length===4)setTimeout(()=>{document.getElementById('modal').classList.remove('open');showL()},350);
+}
+function pd2(){pin=pin.slice(0,-1);uD()}
+function uD(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pin.length)}
+function showL(){
+  const l=document.getElementById('ldr');
+  document.getElementById('auth-loader-txt').textContent='Processing your payment…';
+  l.classList.add('show');
+  setTimeout(()=>{l.classList.remove('show');pay()},2000)
+}
+window.resendOTP=function(){
+  // Re-trigger OTP send — detect which flow we came from
+  const hasRegPhone = document.getElementById('reg-phone')?.value;
+  sendOTP(hasRegPhone ? 'reg' : 'login');
+};
+function pay(){
+  const c=PC[cc];const amt=parseInt(document.getElementById('ai').value);
+  const cb=Math.round(amt*0.01);const now=new Date();
+  document.getElementById('rsvc').textContent=c.t;
+  document.getElementById('rprov').textContent=cp;
+  document.getElementById('ramt').textContent='₦'+amt.toLocaleString()+'.00';
+  document.getElementById('rcb').textContent='+₦'+cb.toLocaleString()+' added to cashback';
+  document.getElementById('rdate').textContent=now.toLocaleString('en-NG',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('rref').textContent='REF: ANI'+Date.now().toString().slice(-10).toUpperCase();
+  document.getElementById('ssub').textContent=c.s+'.';
+  go('success');toast('Payment confirmed ✓',true);
+}
+function sF(el){document.querySelectorAll('.fund-method').forEach(m=>m.classList.remove('on'));el.classList.add('on')}
+function fT(el){document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('on'));el.classList.add('on')}
+function oN(el,i){if(el.value&&i<5)el.parentElement.children[i+1].focus()}
+let _t;
+function toast(msg,ok=false){
+  const t=document.getElementById('tst');t.textContent=msg;
+  t.className='toast show'+(ok?' ok':'');
+  clearTimeout(_t);_t=setTimeout(()=>t.className='toast',2800);
+}
+setTimeout(()=>go('welcome'),2000);
+</script>
+
+<!-- ══ FIREBASE AUTH ══ -->
+<script>
+// ── Stubs available immediately so onclick never fails ────────
+window._fbReady    = false;
+window.sendOTP     = function(f){ window._fbReady ? window._sendOTP(f)     : toast('Please wait a moment and try again.'); };
+window.verifyOTP   = function(){  window._fbReady ? window._verifyOTP()    : toast('Please wait a moment and try again.'); };
+window.resendOTP   = function(){  window._fbReady ? window._resendOTP()    : null; };
+window.signOutUser = function(){  window._fbReady ? window._signOutUser()  : null; };
+
+// ── Wait for Firebase CDN then init ──────────────────────────
+var _initAttempts = 0;
+function initFirebase() {
+  _initAttempts++;
+
+  // Show attempt in console so we can debug
+  if (_initAttempts === 1) console.log('Waiting for Firebase...');
+
+  if (typeof firebase === 'undefined') {
+    if (_initAttempts > 100) {
+      // 10 seconds passed — Firebase truly failed to load
+      console.error('Firebase failed to load after 10s. Are you online?');
+      // Update the send buttons to show error
+      document.querySelectorAll('[id^=send-otp-btn]').forEach(function(btn) {
+        btn.textContent = 'No internet connection — refresh page';
+        btn.style.opacity = '.6';
+      });
+      return;
+    }
+    setTimeout(initFirebase, 100);
+    return;
+  }
+
+  console.log('✅ Firebase ready after ' + _initAttempts + ' checks');
+
+  var firebaseConfig = {
+    apiKey: "AIzaSyDN5skSm2o1V-ac0I5zYouaP74Zi6w0mCI",
+    authDomain: "anipay-79029.firebaseapp.com",
+    projectId: "anipay-79029",
+    storageBucket: "anipay-79029.firebasestorage.app",
+    messagingSenderId: "365713936903",
+    appId: "1:365713936903:web:59750571b618c0a3e510a2"
+  };
+
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  var auth = firebase.auth();
+  var db   = firebase.firestore();
+  auth.languageCode = 'en';
+
+  var confirmResult = null;
+  var currentFlow   = 'reg';
+
+  // Auth state
+  auth.onAuthStateChanged(function(user) {
+    if (user) {
+      loadUserProfile(user).then(function() {
+        var active = document.querySelector('.screen.active');
+        var authIds = ['splash','welcome','reg','login','otp'];
+        if (active && authIds.includes(active.id)) go('home');
+      });
+    }
+  });
+
+  // Load / create profile
+  function loadUserProfile(user) {
+    var ref = db.collection('users').doc(user.uid);
+    return ref.get().then(function(snap) {
+      if (snap.exists) {
+        updateUIWithProfile(snap.data());
+      } else {
+        var nameEl = document.getElementById('reg-name');
+        var name   = nameEl && nameEl.value.trim() ? nameEl.value.trim() : 'Anipay User';
+        var profile = {
+          uid: user.uid, phone: user.phoneNumber, name: name,
+          walletBalance: 0, cashback: 0, totalSaved: 0, billsPaid: 0,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        return ref.set(profile).then(function() { updateUIWithProfile(profile); });
+      }
+    });
+  }
+
+  // Update UI
+  function updateUIWithProfile(d) {
+    var ini  = (d.name||'A').split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+    var fn   = (d.name||'Anipay User').split(' ')[0];
+    document.querySelectorAll('.user-av').forEach(function(e){e.textContent=ini;});
+    document.querySelectorAll('.profile-av').forEach(function(e){e.textContent=ini;});
+    var q = function(s){return document.querySelector(s);};
+    var i = function(s){return document.getElementById(s);};
+    if(q('.wallet-name'))   q('.wallet-name').textContent   = fn+' 👋';
+    if(q('.profile-name'))  q('.profile-name').textContent  = d.name||'Anipay User';
+    if(q('.profile-phone')) q('.profile-phone').textContent = d.phone||'';
+    if(i('wallet-bal-display')) i('wallet-bal-display').textContent = (d.walletBalance||0).toLocaleString('en-NG');
+    if(i('cb-amount-display'))  i('cb-amount-display').textContent  = '₦'+(d.cashback||0).toLocaleString('en-NG')+'.00';
+    var ps = document.querySelectorAll('.p-stat-val');
+    if(ps[0]) ps[0].textContent = d.billsPaid||0;
+    if(ps[1]) ps[1].textContent = '₦'+(d.cashback||0).toLocaleString();
+    if(ps[2]) ps[2].textContent = '₦'+(d.totalSaved||0).toLocaleString();
+  }
+
+  // reCAPTCHA
+  function setupRecaptcha(btnId) {
+    if (window.recaptchaVerifier) {
+      try { window.recaptchaVerifier.clear(); } catch(e) {}
+      window.recaptchaVerifier = null;
+    }
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(btnId, {
+      size: 'invisible',
+      callback: function(){},
+      'expired-callback': function(){ toast('Verification expired. Try again.'); }
+    });
+  }
+
+  // Loader
+  function setLoader(show, txt) {
+    var l = document.getElementById('ldr');
+    var t = document.getElementById('auth-loader-txt');
+    if (t && txt) t.textContent = txt;
+    if (l) l.classList.toggle('show', show);
+  }
+
+  // Resend timer
+  function startResendTimer() {
+    var secs = 60;
+    var btn  = document.getElementById('resend-btn');
+    var lbl  = document.getElementById('resend-timer');
+    if (!btn) return;
+    btn.style.opacity = '.4'; btn.style.pointerEvents = 'none';
+    var iv = setInterval(function() {
+      secs--;
+      if (lbl) lbl.textContent = ' ('+secs+'s)';
+      if (secs <= 0) {
+        clearInterval(iv);
+        btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+        if (lbl) lbl.textContent = '';
+      }
+    }, 1000);
+  }
+
+  // ── Real functions ────────────────────────────────────────
+  window._sendOTP = function(flow) {
+    currentFlow = flow;
+    var phoneEl  = document.getElementById(flow === 'reg' ? 'reg-phone' : 'login-phone');
+    var raw      = (phoneEl ? phoneEl.value : '').replace(/\D/g,'').replace(/^0+/,'');
+    if (!raw || raw.length < 10) { toast('Enter a valid 10-digit Nigerian number'); return; }
+
+    var phone = '+234' + raw;
+    var btnId = flow === 'reg' ? 'send-otp-btn-reg' : 'send-otp-btn-login';
+
+    setLoader(true, 'Sending OTP to ' + phone + '…');
+    setupRecaptcha(btnId);
+
+    auth.signInWithPhoneNumber(phone, window.recaptchaVerifier)
+      .then(function(result) {
+        confirmResult = result;
+        setLoader(false);
+        var disp = document.getElementById('otp-phone-display');
+        if (disp) disp.textContent = phone;
+        go('otp');
+        toast('OTP sent! Check your SMS ✓', true);
+        startResendTimer();
+      })
+      .catch(function(err) {
+        setLoader(false);
+        console.error(err.code, err.message);
+        if      (err.code === 'auth/too-many-requests')     toast('Too many attempts. Wait a few minutes.');
+        else if (err.code === 'auth/invalid-phone-number')  toast('Invalid phone number. Try again.');
+        else if (err.code === 'auth/quota-exceeded')        toast('Daily SMS limit reached. Try tomorrow.');
+        else if (err.code === 'auth/captcha-check-failed')  toast('Captcha failed. Refresh and try again.');
+        else toast('Error: ' + err.message);
+      });
+  };
+
+  window._verifyOTP = function() {
+    var code = Array.from(document.querySelectorAll('.otp-row input'))
+                    .map(function(b){return b.value.trim();}).join('');
+    if (code.length < 6) { toast('Enter the full 6-digit code'); return; }
+    if (!confirmResult)  { toast('Please request OTP first');    return; }
+
+    setLoader(true, 'Verifying code…');
+    confirmResult.confirm(code)
+      .then(function() {
+        setLoader(false);
+        toast('Welcome to Anipay! 🎉', true);
+      })
+      .catch(function(err) {
+        setLoader(false);
+        console.error(err.code, err.message);
+        if      (err.code === 'auth/invalid-verification-code') toast('Wrong OTP. Try again.');
+        else if (err.code === 'auth/code-expired')              toast('OTP expired. Request a new one.');
+        else toast('Verification failed: ' + err.message);
+      });
+  };
+
+  window._resendOTP    = function() { window._sendOTP(currentFlow); };
+  window._signOutUser  = function() {
+    auth.signOut().then(function() { go('welcome'); toast('Signed out.'); });
+  };
+
+  // ── Firebase is ready ─────────────────────────────────────
+  window._fbReady = true;
+  console.log('✅ Anipay Firebase ready');
+}
+
+// Kick off the poll immediately
+initFirebase();
+</script>
+</body>
+</html>
