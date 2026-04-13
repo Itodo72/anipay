@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<meta name="theme-color" content="#f7f6f3"/>
+<meta name="theme-color" content="#1a6b3c"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Anipay"/>
+<meta name="description" content="Pay electricity, data, airtime, flights and more. Lowest rates in Nigeria."/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"/>
 <title>Anipay — Pay Any Bill</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Inter+Tight:wght@300;400;500;600&display=swap" rel="stylesheet"/>
@@ -1211,7 +1219,15 @@ function toast(msg,ok=false){
   t.className='toast show'+(ok?' ok':'');
   clearTimeout(_t);_t=setTimeout(()=>t.className='toast',2800);
 }
-// ── FUND WALLET HELPERS ───────────────────────────────────────
+
+// ── PWA: register service worker ─────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js')
+      .then(function() { console.log('✅ SW registered'); })
+      .catch(function(e) { console.log('SW failed:', e); });
+  });
+}
 function setFundAmt(v) {
   var el = document.getElementById('fund-amount');
   if (el) { el.value = v; updateFundSummary(); }
